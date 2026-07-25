@@ -11,5 +11,21 @@ namespace SmartHire.Data
             : base(options)
         {
         }
+
+
+        public DbSet<RecruiterProfile> RecruiterProfiles { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+            builder.Entity<RecruiterProfile>()
+                .HasOne(r => r.ApplicationUser)
+                .WithOne()
+                .HasForeignKey<RecruiterProfile>(r => r.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
+
+
     }
 }
