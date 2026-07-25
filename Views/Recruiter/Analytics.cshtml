@@ -1,0 +1,441 @@
+﻿@model SmartHire.ViewModels.RecruiterAnalyticsViewModel
+
+@{
+    ViewData["Title"] = "Recruitment Analytics";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2>Recruitment Analytics</h2>
+            <p class="text-muted mb-0">
+                Overview of your jobs and recruitment pipeline.
+            </p>
+        </div>
+
+        <a asp-action="Dashboard"
+           class="btn btn-secondary">
+            Back to Dashboard
+        </a>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- JOB STATISTICS -->
+    <!-- ========================= -->
+
+    <h4 class="mb-3">Jobs Overview</h4>
+
+    <div class="row mb-4">
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Total Jobs
+                    </h6>
+
+                    <h2>
+                        @Model.TotalJobs
+                    </h2>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Active Jobs
+                    </h6>
+
+                    <h2>
+                        @Model.ActiveJobs
+                    </h2>
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Closed Jobs
+                    </h6>
+
+                    <h2>
+                        @Model.ClosedJobs
+                    </h2>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- APPLICATION PIPELINE -->
+    <!-- ========================= -->
+
+    <h4 class="mb-3">
+        Application Pipeline
+    </h4>
+
+    <div class="row mb-4">
+
+        <div class="col-md-4 col-lg-2 mb-3">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Total
+                    </h6>
+
+                    <h3>
+                        @Model.TotalApplications
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 col-lg-2 mb-3">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Applied
+                    </h6>
+
+                    <h3>
+                        @Model.AppliedApplications
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 col-lg-2 mb-3">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Shortlisted
+                    </h6>
+
+                    <h3>
+                        @Model.ShortlistedApplications
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 col-lg-2 mb-3">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Interviews
+                    </h6>
+
+                    <h3>
+                        @Model.InterviewScheduledApplications
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 col-lg-2 mb-3">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Selected
+                    </h6>
+
+                    <h3>
+                        @Model.SelectedApplications
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-4 col-lg-2 mb-3">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+                        Rejected
+                    </h6>
+
+                    <h3>
+                        @Model.RejectedApplications
+                    </h3>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- CONVERSION RATES -->
+    <!-- ========================= -->
+
+    <h4 class="mb-3">
+        Recruitment Rates
+    </h4>
+
+    <div class="row mb-4">
+
+        <div class="col-md-6 mb-3">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <strong>
+                            Shortlist Rate
+                        </strong>
+
+                        <strong>
+                            @Model.ShortlistRate.ToString("0.00")%
+                        </strong>
+
+                    </div>
+
+                    <div class="progress mt-3"
+                         style="height: 25px;">
+
+                        <div class="progress-bar"
+                             role="progressbar"
+                             style="width: @Model.ShortlistRate%;"
+                             aria-valuenow="@Model.ShortlistRate"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+
+                            @Model.ShortlistRate.ToString("0.00")%
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-6 mb-3">
+
+            <div class="card shadow-sm h-100">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <strong>
+                            Selection Rate
+                        </strong>
+
+                        <strong>
+                            @Model.SelectionRate.ToString("0.00")%
+                        </strong>
+
+                    </div>
+
+                    <div class="progress mt-3"
+                         style="height: 25px;">
+
+                        <div class="progress-bar"
+                             role="progressbar"
+                             style="width: @Model.SelectionRate%;"
+                             aria-valuenow="@Model.SelectionRate"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+
+                            @Model.SelectionRate.ToString("0.00")%
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- JOB PERFORMANCE -->
+    <!-- ========================= -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <h4 class="mb-3">
+                Job Performance
+            </h4>
+
+
+            @if (!Model.JobStatistics.Any())
+            {
+                <div class="alert alert-info mb-0">
+
+                    No job statistics are available yet.
+
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+
+                    <table class="table table-bordered table-hover align-middle">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Job
+                                </th>
+
+                                <th>
+                                    Applications
+                                </th>
+
+                                <th>
+                                    Shortlisted
+                                </th>
+
+                                <th>
+                                    Interviews
+                                </th>
+
+                                <th>
+                                    Selected
+                                </th>
+
+                                <th>
+                                    Rejected
+                                </th>
+
+                                <th>
+                                    Action
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            @foreach (var job in Model.JobStatistics)
+                            {
+                                <tr>
+
+                                    <td>
+                                        <strong>
+                                            @job.JobTitle
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        @job.TotalApplications
+                                    </td>
+
+                                    <td>
+                                        @job.Shortlisted
+                                    </td>
+
+                                    <td>
+                                        @job.Interviews
+                                    </td>
+
+                                    <td>
+                                        @job.Selected
+                                    </td>
+
+                                    <td>
+                                        @job.Rejected
+                                    </td>
+
+                                    <td>
+
+                                        <a asp-action="JobApplications"
+                                           asp-route-id="@job.JobId"
+                                           class="btn btn-sm btn-outline-primary">
+
+                                            View Applications
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+                            }
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+
+</div>

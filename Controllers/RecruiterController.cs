@@ -1378,6 +1378,197 @@ namespace SmartHire.Controllers
         //----------------------------------------------------------------------------------------------------------------------------
 
 
+        [HttpGet]
+        public async Task<IActionResult> Analytics()
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            // Get logged-in recruiter's profile
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r =>
+                    r.ApplicationUserId == userId);
+
+            if (recruiterProfile == null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+
+            // Get all jobs posted by this recruiter
+            var jobs = await _context.Jobs
+                .Where(j =>
+                    j.RecruiterProfileId == recruiterProfile.Id)
+                .ToListAsync();
+
+
+            var jobIds = jobs
+                .Select(j => j.Id)
+                .ToList();
+
+
+            // Get all applications belonging to recruiter's jobs
+            var applications = await _context.JobApplications
+                .Where(a =>
+                    jobIds.Contains(a.JobId))
+                .ToListAsync();
+
+
+            // =========================
+            // BASIC COUNTS
+            // =========================
+
+            var totalJobs = jobs.Count;
+
+            var activeJobs =
+                jobs.Count(j => j.IsActive);
+
+            var closedJobs =
+                jobs.Count(j => !j.IsActive);
+
+            var totalApplications =
+                applications.Count;
+
+            var appliedApplications =
+                applications.Count(a =>
+                    a.Status == "Applied");
+
+            var shortlistedApplications =
+                applications.Count(a =>
+                    a.Status == "Shortlisted");
+
+            var interviewScheduledApplications =
+                applications.Count(a =>
+                    a.Status == "Interview Scheduled");
+
+            var selectedApplications =
+                applications.Count(a =>
+                    a.Status == "Selected");
+
+            var rejectedApplications =
+                applications.Count(a =>
+                    a.Status == "Rejected");
+
+
+            // =========================
+            // RATES
+            // =========================
+
+            double shortlistRate = 0;
+
+            double selectionRate = 0;
+
+
+            if (totalApplications > 0)
+            {
+                shortlistRate =
+                    Math.Round(
+                        shortlistedApplications * 100.0 /
+                        totalApplications,
+                        2);
+
+                selectionRate =
+                    Math.Round(
+                        selectedApplications * 100.0 /
+                        totalApplications,
+                        2);
+            }
+
+
+            // =========================
+            // PER-JOB STATISTICS
+            // =========================
+
+            var jobStatistics = jobs
+                .Select(job =>
+                {
+                    var jobApplications =
+                        applications
+                            .Where(a => a.JobId == job.Id)
+                            .ToList();
+
+                    return new JobApplicationStatViewModel
+                    {
+                        JobId = job.Id,
+
+                        JobTitle = job.Title,
+
+                        TotalApplications =
+                            jobApplications.Count,
+
+                        Shortlisted =
+                            jobApplications.Count(a =>
+                                a.Status == "Shortlisted"),
+
+                        Interviews =
+                            jobApplications.Count(a =>
+                                a.Status == "Interview Scheduled"),
+
+                        Selected =
+                            jobApplications.Count(a =>
+                                a.Status == "Selected"),
+
+                        Rejected =
+                            jobApplications.Count(a =>
+                                a.Status == "Rejected")
+                    };
+                })
+                .OrderByDescending(j =>
+                    j.TotalApplications)
+                .ToList();
+
+
+            // =========================
+            // VIEW MODEL
+            // =========================
+
+            var model =
+                new RecruiterAnalyticsViewModel
+                {
+                    TotalJobs = totalJobs,
+
+                    ActiveJobs = activeJobs,
+
+                    ClosedJobs = closedJobs,
+
+                    TotalApplications =
+                        totalApplications,
+
+                    AppliedApplications =
+                        appliedApplications,
+
+                    ShortlistedApplications =
+                        shortlistedApplications,
+
+                    InterviewScheduledApplications =
+                        interviewScheduledApplications,
+
+                    SelectedApplications =
+                        selectedApplications,
+
+                    RejectedApplications =
+                        rejectedApplications,
+
+                    ShortlistRate =
+                        shortlistRate,
+
+                    SelectionRate =
+                        selectionRate,
+
+                    JobStatistics =
+                        jobStatistics
+                };
+
+
+            return View(model);
+        }
+
+
+        //-------------------------------------------------------------------------------------------------------------------------------
 
     }
 }
