@@ -1,0 +1,97 @@
+﻿@model IEnumerable<SmartHire.Models.Message>
+
+@{
+    ViewData["Title"] = "Chat";
+
+    var currentUserId = ViewBag.CurrentUserId as string;
+    var applicationId = (int)ViewBag.ApplicationId;
+}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header">
+            <h4 class="mb-0">
+                Chat - @ViewBag.JobTitle
+            </h4>
+        </div>
+
+        <div class="card-body">
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <!-- Messages -->
+            <div class="border rounded p-3 mb-3"
+                 style="height: 400px; overflow-y: auto;">
+
+                @if (!Model.Any())
+                {
+                    <div class="text-center text-muted mt-5">
+                        No messages yet. Start the conversation.
+                    </div>
+                }
+                else
+                {
+                    @foreach (var message in Model)
+                    {
+                        var isMine =
+                            message.SenderId == currentUserId;
+
+                        <div class="d-flex mb-3 @(isMine ? "justify-content-end" : "justify-content-start")">
+
+                            <div class="p-3 rounded @(isMine ? "bg-primary text-white" : "bg-light")"
+                                 style="max-width: 70%;">
+
+                                <div>
+                                    @message.Content
+                                </div>
+
+                                <small class="d-block mt-1 @(isMine ? "text-white-50" : "text-muted")">
+                                    @(message.SentAt.ToLocalTime().ToString("dd MMM yyyy hh:mm tt"))
+                                </small>
+
+                            </div>
+
+                        </div>
+                    }
+                }
+
+            </div>
+
+            <!-- Send Message -->
+            <form asp-action="Send"
+                  method="post">
+
+                <input type="hidden"
+                       name="applicationId"
+                       value="@applicationId" />
+
+                <div class="input-group">
+
+                    <input type="text"
+                           name="content"
+                           class="form-control"
+                           maxlength="1000"
+                           required
+                           placeholder="Type your message..." />
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Send
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>

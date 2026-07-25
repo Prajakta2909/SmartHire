@@ -1,0 +1,87 @@
+﻿@model IEnumerable<SmartHire.Models.JobApplication>
+
+@{
+    ViewData["Title"] = "Messages";
+
+    var currentUserId =
+        ViewBag.CurrentUserId as string;
+
+    var unreadCounts =
+        ViewBag.UnreadCounts as Dictionary<int, int>
+        ?? new Dictionary<int, int>();
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">
+        Messages
+    </h2>
+
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            You don't have any conversations yet.
+        </div>
+    }
+    else
+    {
+        <div class="list-group">
+
+            @foreach (var application in Model)
+            {
+                var isCandidate =
+                    application.CandidateProfile.ApplicationUserId
+                    == currentUserId;
+
+                var otherPersonName = isCandidate
+                    ? $"{application.Job.RecruiterProfile.ApplicationUser.FirstName} {application.Job.RecruiterProfile.ApplicationUser.LastName}"
+                    : $"{application.CandidateProfile.ApplicationUser.FirstName} {application.CandidateProfile.ApplicationUser.LastName}";
+
+                var unreadCount =
+                    unreadCounts.ContainsKey(application.Id)
+                        ? unreadCounts[application.Id]
+                        : 0;
+
+
+                <a asp-controller="Chat"
+                   asp-action="Conversation"
+                   asp-route-applicationId="@application.Id"
+                   class="list-group-item list-group-item-action">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <h5 class="mb-1">
+                                @otherPersonName
+                            </h5>
+
+                            <p class="mb-1">
+                                @application.Job.Title
+                            </p>
+
+                            <small class="text-muted">
+                                Application Status:
+                                @application.Status
+                            </small>
+
+                        </div>
+
+
+                        @if (unreadCount > 0)
+                        {
+                            <span class="badge bg-danger rounded-pill">
+                                @unreadCount
+                            </span>
+                        }
+
+                    </div>
+
+                </a>
+            }
+
+        </div>
+    }
+
+</div>

@@ -98,6 +98,7 @@
                             </td>
 
                             <td>
+
                                 @if (application.Job.IsActive)
                                 {
                                     <a asp-action="JobDetails"
@@ -113,6 +114,16 @@
                                     </span>
                                 }
 
+
+                                <!-- CHAT BUTTON -->
+                                <a asp-controller="Chat"
+                                   asp-action="Conversation"
+                                   asp-route-applicationId="@application.Id"
+                                   class="btn btn-sm btn-outline-success">
+                                    Chat
+                                </a>
+
+
                                 @if (application.Status == "Interview Scheduled")
                                 {
                                     <a asp-action="InterviewDetails"
@@ -121,9 +132,8 @@
                                         Interview Details
                                     </a>
                                 }
+
                             </td>
-
-
 
                         </tr>
                     }

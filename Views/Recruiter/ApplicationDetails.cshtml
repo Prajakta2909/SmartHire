@@ -293,7 +293,18 @@
             }
 
 
+            @* =========================
+               CHAT + BACK BUTTON
+               ========================= *@
+
             <div class="mt-4">
+
+                <a asp-controller="Chat"
+                   asp-action="Conversation"
+                   asp-route-applicationId="@Model.Id"
+                   class="btn btn-success me-2">
+                    Chat with Candidate
+                </a>
 
                 <a asp-action="JobApplications"
                    asp-route-id="@Model.JobId"
