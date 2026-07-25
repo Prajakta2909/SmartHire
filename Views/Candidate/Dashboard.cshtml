@@ -1,11 +1,83 @@
-﻿@{
+﻿@model SmartHire.ViewModels.CandidateDashboardViewModel
+
+@{
     ViewData["Title"] = "Candidate Dashboard";
 }
 
 <div class="container mt-4">
 
-    <h2>Candidate Dashboard</h2>
+    <h2 class="mb-4">Candidate Dashboard</h2>
 
-    <p>Welcome to your SmartHire candidate dashboard.</p>
+    <!-- Statistics -->
+    <div class="row mb-4">
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Total Applications</h5>
+                    <h2>@Model.TotalApplications</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Shortlisted</h5>
+                    <h2>@Model.ShortlistedApplications</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Interviews</h5>
+                    <h2>@Model.InterviewsScheduled</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Selected</h5>
+                    <h2>@Model.SelectedApplications</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <h4 class="mb-3">Quick Actions</h4>
+
+            <a asp-action="BrowseJobs"
+               class="btn btn-primary me-2 mb-2">
+                Browse Jobs
+            </a>
+
+            <a asp-action="MyApplications"
+               class="btn btn-success me-2 mb-2">
+                My Applications
+            </a>
+
+            <a asp-action="Profile"
+               class="btn btn-secondary me-2 mb-2">
+                My Profile
+            </a>
+
+            <a asp-action="UploadResume"
+               class="btn btn-dark mb-2">
+                Resume
+            </a>
+
+        </div>
+
+    </div>
 
 </div>

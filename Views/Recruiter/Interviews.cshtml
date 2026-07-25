@@ -1,0 +1,130 @@
+﻿@model IEnumerable<SmartHire.Models.Interview>
+
+@{
+    ViewData["Title"] = "Interviews";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Scheduled Interviews</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No interviews have been scheduled yet.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Job</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Mode</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var interview in Model)
+                    {
+                        <tr>
+
+                            <td>
+                                @(interview.JobApplication
+                                    .CandidateProfile
+                                    .ApplicationUser
+                                    .FirstName)
+
+                                @(interview.JobApplication
+                                    .CandidateProfile
+                                    .ApplicationUser
+                                    .LastName)
+                            </td>
+
+                            <td>
+                                @interview.JobApplication.Job.Title
+                            </td>
+
+                            <td>
+                                @(interview.ScheduledDateTime
+                                    .ToString("dd MMM yyyy"))
+                            </td>
+
+                            <td>
+                                @(interview.ScheduledDateTime
+                                    .ToString("hh:mm tt"))
+                            </td>
+
+                            <td>
+                                @interview.InterviewMode
+                            </td>
+
+                            <td>
+                                @if (interview.JobApplication.Status == "Interview Scheduled")
+                                {
+                                    <span class="badge bg-info text-dark">
+                                        Interview Scheduled
+                                    </span>
+                                }
+                                else if (interview.JobApplication.Status == "Selected")
+                                {
+                                    <span class="badge bg-success">
+                                        Selected
+                                    </span>
+                                }
+                                else if (interview.JobApplication.Status == "Rejected")
+                                {
+                                    <span class="badge bg-danger">
+                                        Rejected
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @interview.JobApplication.Status
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                <a asp-action="ApplicationDetails"
+                                   asp-route-id="@interview.JobApplicationId"
+                                   class="btn btn-sm btn-primary">
+                                    View Candidate
+                                </a>
+
+                                @if (interview.JobApplication.Status == "Interview Scheduled")
+                                {
+                                    <a asp-action="RescheduleInterview"
+                                       asp-route-id="@interview.Id"
+                                       class="btn btn-sm btn-warning">
+                                        Reschedule
+                                    </a>
+                                }
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+
+    <a asp-action="Dashboard"
+       class="btn btn-secondary">
+        Back to Dashboard
+    </a>
+
+</div>

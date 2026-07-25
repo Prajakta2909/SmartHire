@@ -1,8 +1,78 @@
-﻿@{
+﻿@model SmartHire.ViewModels.RecruiterDashboardViewModel
+
+@{
     ViewData["Title"] = "Recruiter Dashboard";
 }
 
 <div class="container mt-4">
-    <h2>Recruiter Dashboard</h2>
-    <p>Welcome to your SmartHire recruiter dashboard.</p>
+
+    <h2 class="mb-4">Recruiter Dashboard</h2>
+
+    <!-- Statistics -->
+    <div class="row mb-4">
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Total Jobs</h5>
+                    <h2>@Model.TotalJobs</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Active Jobs</h5>
+                    <h2>@Model.ActiveJobs</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Applications</h5>
+                    <h2>@Model.TotalApplications</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Selected Candidates</h5>
+                    <h2>@Model.SelectedCandidates</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <h4 class="mb-3">Quick Actions</h4>
+
+            <a asp-action="CreateJob"
+               class="btn btn-primary me-2 mb-2">
+                Post New Job
+            </a>
+
+            <a asp-action="MyJobs"
+               class="btn btn-success me-2 mb-2">
+                My Jobs
+            </a>
+
+            <a asp-action="Profile"
+               class="btn btn-secondary mb-2">
+                Company Profile
+            </a>
+
+        </div>
+
+    </div>
+
 </div>

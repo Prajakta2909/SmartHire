@@ -60,27 +60,107 @@
                     <ul class="navbar-nav flex-grow-1">
 
                         <li class="nav-item">
-
                             <a class="nav-link text-dark"
                                asp-controller="Home"
                                asp-action="Index">
                                 Home
                             </a>
-
                         </li>
 
+                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+                        {
+                            @if (User.IsInRole("Candidate"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Candidate"
+                                       asp-action="Dashboard">
+                                        Dashboard
+                                    </a>
+                                </li>
 
-                        <li class="nav-item">
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Candidate"
+                                       asp-action="BrowseJobs">
+                                        Browse Jobs
+                                    </a>
+                                </li>
 
-                            <a class="nav-link text-dark"
-                               asp-controller="Home"
-                               asp-action="Privacy">
-                                Privacy
-                            </a>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Candidate"
+                                       asp-action="MyApplications">
+                                        My Applications
+                                    </a>
+                                </li>
 
-                        </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Candidate"
+                                       asp-action="Profile">
+                                        Profile
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Candidate"
+                                       asp-action="UploadResume">
+                                        Resume
+                                    </a>
+                                </li>
+                            }
+
+                            @if (User.IsInRole("Recruiter"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Recruiter"
+                                       asp-action="Dashboard">
+                                        Dashboard
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Recruiter"
+                                       asp-action="CreateJob">
+                                        Post Job
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Recruiter"
+                                       asp-action="MyJobs">
+                                        My Jobs
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Recruiter"
+                                       asp-action="Interviews">
+                                        Interviews
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Recruiter"
+                                       asp-action="Profile">
+                                        Company Profile
+                                    </a>
+                                </li>
+
+                                
+                            }
+                        }
 
                     </ul>
+
+
 
 
                     <!-- RIGHT SIDE NAVIGATION -->

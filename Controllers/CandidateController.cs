@@ -25,10 +25,49 @@ namespace SmartHire.Controllers
             _environment = environment;
         }
 
-        public IActionResult Dashboard()
+
+        //----------------------------------------------------------------------------------------------------------------------
+        public async Task<IActionResult> Dashboard()
         {
-            return View();
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var candidateProfile = await _context.CandidateProfiles
+                .FirstOrDefaultAsync(c => c.ApplicationUserId == userId);
+
+            var model = new CandidateDashboardViewModel();
+
+            if (candidateProfile != null)
+            {
+                model.TotalApplications = await _context.JobApplications
+                    .CountAsync(a =>
+                        a.CandidateProfileId == candidateProfile.Id);
+
+                model.ShortlistedApplications = await _context.JobApplications
+                    .CountAsync(a =>
+                        a.CandidateProfileId == candidateProfile.Id &&
+                        a.Status == "Shortlisted");
+
+                model.InterviewsScheduled = await _context.JobApplications
+                    .CountAsync(a =>
+                        a.CandidateProfileId == candidateProfile.Id &&
+                        a.Status == "Interview Scheduled");
+
+                model.SelectedApplications = await _context.JobApplications
+                    .CountAsync(a =>
+                        a.CandidateProfileId == candidateProfile.Id &&
+                        a.Status == "Selected");
+            }
+
+            return View(model);
         }
+
+
+        //------------------------------------------------------------------------------------------------------------------------
 
         [HttpGet]
         public async Task<IActionResult> Profile()

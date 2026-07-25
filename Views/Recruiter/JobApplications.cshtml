@@ -12,6 +12,79 @@
         Candidates who have applied for this position.
     </p>
 
+
+
+    <form asp-action="JobApplications"
+          method="get"
+          class="mb-4">
+
+        <input type="hidden"
+               name="id"
+               value="@ViewBag.JobId" />
+
+        <div class="row">
+
+            <div class="col-md-4">
+
+                <select name="status"
+                        class="form-select">
+
+                    <option value=""
+                            selected="@(ViewBag.SelectedStatus == null)">
+                        All Applications
+                    </option>
+
+                    <option value="Applied"
+                            selected="@(ViewBag.SelectedStatus == "Applied")">
+                        Applied
+                    </option>
+
+                    <option value="Shortlisted"
+                            selected="@(ViewBag.SelectedStatus == "Shortlisted")">
+                        Shortlisted
+                    </option>
+
+                    <option value="Interview Scheduled"
+                            selected="@(ViewBag.SelectedStatus == "Interview Scheduled")">
+                        Interview Scheduled
+                    </option>
+
+                    <option value="Selected"
+                            selected="@(ViewBag.SelectedStatus == "Selected")">
+                        Selected
+                    </option>
+
+                    <option value="Rejected"
+                            selected="@(ViewBag.SelectedStatus == "Rejected")">
+                        Rejected
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    Filter
+                </button>
+
+                <a asp-action="JobApplications"
+                   asp-route-id="@ViewBag.JobId"
+                   class="btn btn-secondary">
+                    Clear
+                </a>
+
+            </div>
+
+        </div>
+
+    </form>
+
+
+
+
     @if (!Model.Any())
     {
         <div class="alert alert-info">

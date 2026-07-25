@@ -26,11 +26,51 @@ namespace SmartHire.Controllers
         }
 
 
+        //----------------------------------------------------------------------------------------------------------------------
 
-        public IActionResult Dashboard()
+
+        public async Task<IActionResult> Dashboard()
         {
-            return View();
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r =>
+                    r.ApplicationUserId == userId);
+
+            var model = new RecruiterDashboardViewModel();
+
+            if (recruiterProfile != null)
+            {
+                model.TotalJobs = await _context.Jobs
+                    .CountAsync(j =>
+                        j.RecruiterProfileId == recruiterProfile.Id);
+
+                model.ActiveJobs = await _context.Jobs
+                    .CountAsync(j =>
+                        j.RecruiterProfileId == recruiterProfile.Id &&
+                        j.IsActive);
+
+                model.TotalApplications = await _context.JobApplications
+                    .CountAsync(a =>
+                        a.Job.RecruiterProfileId == recruiterProfile.Id);
+
+                model.SelectedCandidates = await _context.JobApplications
+                    .CountAsync(a =>
+                        a.Job.RecruiterProfileId == recruiterProfile.Id &&
+                        a.Status == "Selected");
+            }
+
+            return View(model);
         }
+
+
+
+        //--------------------------------------------------------------------------------------------------------------------------
 
         [HttpGet]
         public async Task<IActionResult> Profile()
@@ -412,7 +452,9 @@ namespace SmartHire.Controllers
         //--------------------------------------------------------------------------------------------------------------------------------
 
         [HttpGet]
-        public async Task<IActionResult> JobApplications(int id)
+        public async Task<IActionResult> JobApplications(
+    int id,
+    string? status)
         {
             var userId = _userManager.GetUserId(User);
 
@@ -422,14 +464,15 @@ namespace SmartHire.Controllers
             }
 
             var recruiterProfile = await _context.RecruiterProfiles
-                .FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+                .FirstOrDefaultAsync(r =>
+                    r.ApplicationUserId == userId);
 
             if (recruiterProfile == null)
             {
                 return RedirectToAction(nameof(Profile));
             }
 
-            // Make sure this job belongs to the logged-in recruiter
+            // Make sure the job belongs to logged-in recruiter
             var job = await _context.Jobs
                 .FirstOrDefaultAsync(j =>
                     j.Id == id &&
@@ -440,18 +483,29 @@ namespace SmartHire.Controllers
                 return NotFound();
             }
 
-            var applications = await _context.JobApplications
+            var query = _context.JobApplications
                 .Include(a => a.CandidateProfile)
                     .ThenInclude(c => c.ApplicationUser)
-                .Where(a => a.JobId == id)
+                .Where(a => a.JobId == id);
+
+            // Filter by application status
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                query = query.Where(a => a.Status == status);
+            }
+
+            var applications = await query
                 .OrderByDescending(a => a.AppliedDate)
                 .ToListAsync();
 
             ViewBag.JobTitle = job.Title;
             ViewBag.JobId = job.Id;
+            ViewBag.SelectedStatus = status;
 
             return View(applications);
         }
+
+
 
 
         //-----------------------------------------------------------------------------------------------------------------------------------------------
@@ -569,11 +623,11 @@ namespace SmartHire.Controllers
                 return RedirectToAction(nameof(Profile));
             }
 
-            // Allow only valid status values
             var allowedStatuses = new[]
             {
         "Shortlisted",
-        "Rejected"
+        "Rejected",
+        "Selected"
     };
 
             if (!allowedStatuses.Contains(status))
@@ -592,6 +646,19 @@ namespace SmartHire.Controllers
                 return NotFound();
             }
 
+            // ADD THE NEW CHECK HERE 
+            if (status == "Selected" &&
+                application.Status != "Interview Scheduled")
+            {
+                TempData["ErrorMessage"] =
+                    "Candidate can be selected only after an interview is scheduled.";
+
+                return RedirectToAction(
+                    nameof(ApplicationDetails),
+                    new { id = application.Id });
+            }
+
+            // Then status is updated
             application.Status = status;
 
             await _context.SaveChangesAsync();
@@ -603,6 +670,8 @@ namespace SmartHire.Controllers
                 nameof(ApplicationDetails),
                 new { id = application.Id });
         }
+
+
 
 
         //---------------------------------------------------------------------------------------------------------------------------------------------
@@ -812,6 +881,197 @@ namespace SmartHire.Controllers
 
 
         //------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> Interviews()
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r =>
+                    r.ApplicationUserId == userId);
+
+            if (recruiterProfile == null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var interviews = await _context.Interviews
+                .Include(i => i.JobApplication)
+                    .ThenInclude(a => a.Job)
+                .Include(i => i.JobApplication)
+                    .ThenInclude(a => a.CandidateProfile)
+                        .ThenInclude(c => c.ApplicationUser)
+                .Where(i =>
+                    i.JobApplication.Job.RecruiterProfileId
+                        == recruiterProfile.Id)
+                .OrderBy(i => i.ScheduledDateTime)
+                .ToListAsync();
+
+            return View(interviews);
+        }
+
+        //-------------------------------------------------------------------------------------------------------------------------------
+
+
+        [HttpGet]
+        public async Task<IActionResult> RescheduleInterview(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+
+            if (recruiterProfile == null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var interview = await _context.Interviews
+                .Include(i => i.JobApplication)
+                    .ThenInclude(a => a.Job)
+                .FirstOrDefaultAsync(i =>
+                    i.Id == id &&
+                    i.JobApplication.Job.RecruiterProfileId == recruiterProfile.Id);
+
+            if (interview == null)
+            {
+                return NotFound();
+            }
+
+            var model = new ScheduleInterviewViewModel
+            {
+                JobApplicationId = interview.JobApplicationId,
+                ScheduledDateTime = interview.ScheduledDateTime,
+                InterviewMode = interview.InterviewMode,
+                MeetingLink = interview.MeetingLink,
+                Location = interview.Location,
+                Instructions = interview.Instructions
+            };
+
+            ViewBag.InterviewId = interview.Id;
+
+            return View(model);
+        }
+
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RescheduleInterview(
+    int interviewId,
+    ScheduleInterviewViewModel model)
+        {
+            if (model.ScheduledDateTime <= DateTime.Now)
+            {
+                ModelState.AddModelError(
+                    nameof(model.ScheduledDateTime),
+                    "Interview date and time must be in the future.");
+            }
+
+            var allowedModes = new[]
+            {
+        "Online",
+        "In Person"
+    };
+
+            if (!allowedModes.Contains(model.InterviewMode))
+            {
+                ModelState.AddModelError(
+                    nameof(model.InterviewMode),
+                    "Please select a valid interview mode.");
+            }
+
+            if (model.InterviewMode == "Online" &&
+                string.IsNullOrWhiteSpace(model.MeetingLink))
+            {
+                ModelState.AddModelError(
+                    nameof(model.MeetingLink),
+                    "Meeting link is required for an online interview.");
+            }
+
+            if (model.InterviewMode == "In Person" &&
+                string.IsNullOrWhiteSpace(model.Location))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Location),
+                    "Location is required for an in-person interview.");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                ViewBag.InterviewId = interviewId;
+                return View(model);
+            }
+
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r =>
+                    r.ApplicationUserId == userId);
+
+            if (recruiterProfile == null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var interview = await _context.Interviews
+                .Include(i => i.JobApplication)
+                    .ThenInclude(a => a.Job)
+                .FirstOrDefaultAsync(i =>
+                    i.Id == interviewId &&
+                    i.JobApplication.Job.RecruiterProfileId
+                        == recruiterProfile.Id);
+
+            if (interview == null)
+            {
+                return NotFound();
+            }
+
+            interview.ScheduledDateTime = model.ScheduledDateTime;
+            interview.InterviewMode = model.InterviewMode;
+
+            interview.MeetingLink =
+                model.InterviewMode == "Online"
+                    ? model.MeetingLink
+                    : null;
+
+            interview.Location =
+                model.InterviewMode == "In Person"
+                    ? model.Location
+                    : null;
+
+            interview.Instructions = model.Instructions;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] =
+                "Interview rescheduled successfully.";
+
+            return RedirectToAction(nameof(Interviews));
+        }
+
+        //----------------------------------------------------------------------------------------------------------------------------
+
 
 
     }
