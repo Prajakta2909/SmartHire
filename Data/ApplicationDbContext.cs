@@ -18,6 +18,7 @@ namespace SmartHire.Data
         public DbSet<CandidateProfile> CandidateProfiles { get; set; }
         public DbSet<JobApplication> JobApplications { get; set; }
         public DbSet<Interview> Interviews { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)

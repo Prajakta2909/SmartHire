@@ -299,10 +299,10 @@ namespace SmartHire.Controllers
 
         [HttpGet]
         public async Task<IActionResult> BrowseJobs(
-string? searchTerm,
-string? location,
-string? employmentType,
-int pageNumber = 1)
+            string? searchTerm,
+            string? location,
+            string? employmentType,
+            int pageNumber = 1)
         {
             const int pageSize = 5;
 
@@ -404,8 +404,9 @@ int pageNumber = 1)
                 return Unauthorized();
             }
 
-            // Find logged-in candidate's profile
+            // Find logged-in candidate profile
             var candidateProfile = await _context.CandidateProfiles
+                .Include(c => c.ApplicationUser)
                 .FirstOrDefaultAsync(c => c.ApplicationUserId == userId);
 
             if (candidateProfile == null)
@@ -416,7 +417,7 @@ int pageNumber = 1)
                 return RedirectToAction(nameof(Profile));
             }
 
-            // Require resume before applying
+            // Resume is required
             if (string.IsNullOrEmpty(candidateProfile.ResumePath))
             {
                 TempData["ErrorMessage"] =
@@ -425,8 +426,9 @@ int pageNumber = 1)
                 return RedirectToAction(nameof(UploadResume));
             }
 
-            // Candidate can apply only to an active job
+            // Get active job
             var job = await _context.Jobs
+                .Include(j => j.RecruiterProfile)
                 .FirstOrDefaultAsync(j =>
                     j.Id == id &&
                     j.IsActive);
@@ -436,7 +438,7 @@ int pageNumber = 1)
                 return NotFound();
             }
 
-            // Do not allow applications after deadline
+            // Check application deadline
             if (job.ApplicationDeadline.HasValue &&
                 job.ApplicationDeadline.Value.Date < DateTime.UtcNow.Date)
             {
@@ -448,7 +450,7 @@ int pageNumber = 1)
                     new { id });
             }
 
-            // Check duplicate application
+            // Prevent duplicate application
             var alreadyApplied = await _context.JobApplications
                 .AnyAsync(a =>
                     a.CandidateProfileId == candidateProfile.Id &&
@@ -464,6 +466,7 @@ int pageNumber = 1)
                     new { id });
             }
 
+            // Create application
             var application = new JobApplication
             {
                 CandidateProfileId = candidateProfile.Id,
@@ -474,7 +477,30 @@ int pageNumber = 1)
 
             _context.JobApplications.Add(application);
 
+
+            // Create notification for recruiter
+            var candidateName =
+                $"{candidateProfile.ApplicationUser.FirstName} " +
+                $"{candidateProfile.ApplicationUser.LastName}";
+
+            var notification = new Notification
+            {
+                UserId = job.RecruiterProfile.ApplicationUserId,
+
+                Message =
+                    $"{candidateName} applied for {job.Title}.",
+
+                IsRead = false,
+
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Notifications.Add(notification);
+
+
+            // Save application + notification together
             await _context.SaveChangesAsync();
+
 
             TempData["SuccessMessage"] =
                 "Application submitted successfully.";
@@ -483,6 +509,9 @@ int pageNumber = 1)
                 nameof(JobDetails),
                 new { id });
         }
+
+
+
 
 
         //---------------------------------------------------------------------------------------------------------------------------------

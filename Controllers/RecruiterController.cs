@@ -135,25 +135,30 @@ namespace SmartHire.Controllers
         //---------------------------------------------------------------------------------------------------------------------------------------
 
 
+
+
         [HttpGet]
         public IActionResult CreateJob()
         {
             return View();
         }
 
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateJob(CreateJobViewModel model)
         {
+            // Check ViewModel validation
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
+
             // Validate salary range
             if (model.SalaryMin.HasValue &&
                 model.SalaryMax.HasValue &&
-                model.SalaryMin > model.SalaryMax)
+                model.SalaryMin.Value > model.SalaryMax.Value)
             {
                 ModelState.AddModelError(
                     nameof(model.SalaryMax),
@@ -162,7 +167,8 @@ namespace SmartHire.Controllers
                 return View(model);
             }
 
-            // Validate deadline
+
+            // Validate application deadline
             if (model.ApplicationDeadline.HasValue &&
                 model.ApplicationDeadline.Value.Date < DateTime.UtcNow.Date)
             {
@@ -173,6 +179,8 @@ namespace SmartHire.Controllers
                 return View(model);
             }
 
+
+            // Get logged-in recruiter
             var userId = _userManager.GetUserId(User);
 
             if (userId == null)
@@ -180,8 +188,11 @@ namespace SmartHire.Controllers
                 return Unauthorized();
             }
 
+
+            // Get recruiter profile
             var recruiterProfile = await _context.RecruiterProfiles
-                .FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+                .FirstOrDefaultAsync(r =>
+                    r.ApplicationUserId == userId);
 
             if (recruiterProfile == null)
             {
@@ -191,6 +202,8 @@ namespace SmartHire.Controllers
                 return RedirectToAction(nameof(Profile));
             }
 
+
+            // Create new job
             var job = new Job
             {
                 Title = model.Title,
@@ -199,23 +212,35 @@ namespace SmartHire.Controllers
                 EmploymentType = model.EmploymentType,
                 RequiredSkills = model.RequiredSkills,
                 ExperienceRequired = model.ExperienceRequired,
+
                 SalaryMin = model.SalaryMin,
                 SalaryMax = model.SalaryMax,
+
                 ApplicationDeadline = model.ApplicationDeadline,
 
                 RecruiterProfileId = recruiterProfile.Id,
+
                 PostedDate = DateTime.UtcNow,
+
                 IsActive = true
             };
 
+
+            // Save job
             _context.Jobs.Add(job);
 
             await _context.SaveChangesAsync();
 
-            TempData["SuccessMessage"] = "Job posted successfully.";
+
+            TempData["SuccessMessage"] =
+                "Job posted successfully.";
+
 
             return RedirectToAction(nameof(Dashboard));
         }
+
+
+
 
 
         //----------------------------------------------------------------------------------------------------------------------------
@@ -605,8 +630,8 @@ namespace SmartHire.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateApplicationStatus(
-    int id,
-    string status)
+     int id,
+     string status)
         {
             var userId = _userManager.GetUserId(User);
 
@@ -635,8 +660,11 @@ namespace SmartHire.Controllers
                 return BadRequest("Invalid application status.");
             }
 
+            // Load Job + Candidate + Candidate's ApplicationUser
             var application = await _context.JobApplications
                 .Include(a => a.Job)
+                .Include(a => a.CandidateProfile)
+                    .ThenInclude(c => c.ApplicationUser)
                 .FirstOrDefaultAsync(a =>
                     a.Id == id &&
                     a.Job.RecruiterProfileId == recruiterProfile.Id);
@@ -646,7 +674,7 @@ namespace SmartHire.Controllers
                 return NotFound();
             }
 
-            // ADD THE NEW CHECK HERE 
+            // Candidate can be selected only after interview
             if (status == "Selected" &&
                 application.Status != "Interview Scheduled")
             {
@@ -658,10 +686,45 @@ namespace SmartHire.Controllers
                     new { id = application.Id });
             }
 
-            // Then status is updated
+            // Update application status
             application.Status = status;
 
+
+            // Prepare notification message
+            string notificationMessage;
+
+            if (status == "Shortlisted")
+            {
+                notificationMessage =
+                    $"You have been shortlisted for {application.Job.Title}.";
+            }
+            else if (status == "Selected")
+            {
+                notificationMessage =
+                    $"Congratulations! You have been selected for {application.Job.Title}.";
+            }
+            else
+            {
+                notificationMessage =
+                    $"Your application for {application.Job.Title} has been rejected.";
+            }
+
+
+            // Create notification for candidate
+            var notification = new Notification
+            {
+                UserId = application.CandidateProfile.ApplicationUserId,
+                Message = notificationMessage,
+                IsRead = false,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Notifications.Add(notification);
+
+
+            // Save status + notification together
             await _context.SaveChangesAsync();
+
 
             TempData["SuccessMessage"] =
                 $"Candidate marked as {status}.";
@@ -670,6 +733,7 @@ namespace SmartHire.Controllers
                 nameof(ApplicationDetails),
                 new { id = application.Id });
         }
+
 
 
 
@@ -814,9 +878,12 @@ namespace SmartHire.Controllers
                 return RedirectToAction(nameof(Profile));
             }
 
+
+            // Get application + job + interview + candidate
             var application = await _context.JobApplications
                 .Include(a => a.Job)
                 .Include(a => a.Interview)
+                .Include(a => a.CandidateProfile)
                 .FirstOrDefaultAsync(a =>
                     a.Id == model.JobApplicationId &&
                     a.Job.RecruiterProfileId == recruiterProfile.Id);
@@ -826,6 +893,8 @@ namespace SmartHire.Controllers
                 return NotFound();
             }
 
+
+            // Only shortlisted candidates can have interview
             if (application.Status != "Shortlisted")
             {
                 TempData["ErrorMessage"] =
@@ -836,6 +905,8 @@ namespace SmartHire.Controllers
                     new { id = application.Id });
             }
 
+
+            // Prevent duplicate interview
             if (application.Interview != null)
             {
                 TempData["ErrorMessage"] =
@@ -846,10 +917,14 @@ namespace SmartHire.Controllers
                     new { id = application.Id });
             }
 
+
+            // Create interview
             var interview = new Interview
             {
                 JobApplicationId = application.Id,
+
                 ScheduledDateTime = model.ScheduledDateTime,
+
                 InterviewMode = model.InterviewMode,
 
                 MeetingLink = model.InterviewMode == "Online"
@@ -861,23 +936,50 @@ namespace SmartHire.Controllers
                     : null,
 
                 Instructions = model.Instructions,
+
                 CreatedDate = DateTime.UtcNow
             };
 
             _context.Interviews.Add(interview);
 
-            // Candidate will now see this status
+
+            // Update application status
             application.Status = "Interview Scheduled";
 
+
+            // Create notification for candidate
+            var notification = new Notification
+            {
+                UserId = application.CandidateProfile.ApplicationUserId,
+
+                Message =
+                    $"Your interview for {application.Job.Title} " +
+                    $"has been scheduled for " +
+                    $"{model.ScheduledDateTime:dd MMM yyyy hh:mm tt}.",
+
+                IsRead = false,
+
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Notifications.Add(notification);
+
+
+            // Save interview + status + notification
             await _context.SaveChangesAsync();
+
 
             TempData["SuccessMessage"] =
                 "Interview scheduled successfully.";
+
 
             return RedirectToAction(
                 nameof(ApplicationDetails),
                 new { id = application.Id });
         }
+
+
+
 
 
         //------------------------------------------------------------------------------------------------------------------------------
@@ -976,6 +1078,7 @@ namespace SmartHire.Controllers
     int interviewId,
     ScheduleInterviewViewModel model)
         {
+            // Interview must be in the future
             if (model.ScheduledDateTime <= DateTime.Now)
             {
                 ModelState.AddModelError(
@@ -983,6 +1086,7 @@ namespace SmartHire.Controllers
                     "Interview date and time must be in the future.");
             }
 
+            // Validate interview mode
             var allowedModes = new[]
             {
         "Online",
@@ -996,6 +1100,7 @@ namespace SmartHire.Controllers
                     "Please select a valid interview mode.");
             }
 
+            // Online interview requires meeting link
             if (model.InterviewMode == "Online" &&
                 string.IsNullOrWhiteSpace(model.MeetingLink))
             {
@@ -1004,6 +1109,7 @@ namespace SmartHire.Controllers
                     "Meeting link is required for an online interview.");
             }
 
+            // In-person interview requires location
             if (model.InterviewMode == "In Person" &&
                 string.IsNullOrWhiteSpace(model.Location))
             {
@@ -1018,6 +1124,8 @@ namespace SmartHire.Controllers
                 return View(model);
             }
 
+
+            // Get logged-in recruiter
             var userId = _userManager.GetUserId(User);
 
             if (userId == null)
@@ -1034,9 +1142,13 @@ namespace SmartHire.Controllers
                 return RedirectToAction(nameof(Profile));
             }
 
+
+            // Get interview + job + candidate
             var interview = await _context.Interviews
                 .Include(i => i.JobApplication)
                     .ThenInclude(a => a.Job)
+                .Include(i => i.JobApplication)
+                    .ThenInclude(a => a.CandidateProfile)
                 .FirstOrDefaultAsync(i =>
                     i.Id == interviewId &&
                     i.JobApplication.Job.RecruiterProfileId
@@ -1047,7 +1159,10 @@ namespace SmartHire.Controllers
                 return NotFound();
             }
 
+
+            // Update interview
             interview.ScheduledDateTime = model.ScheduledDateTime;
+
             interview.InterviewMode = model.InterviewMode;
 
             interview.MeetingLink =
@@ -1062,13 +1177,42 @@ namespace SmartHire.Controllers
 
             interview.Instructions = model.Instructions;
 
+
+            // Create notification for candidate
+            var notification = new Notification
+            {
+                UserId =
+                    interview.JobApplication
+                        .CandidateProfile
+                        .ApplicationUserId,
+
+                Message =
+                    $"Your interview for " +
+                    $"{interview.JobApplication.Job.Title} " +
+                    $"has been rescheduled to " +
+                    $"{model.ScheduledDateTime:dd MMM yyyy hh:mm tt}.",
+
+                IsRead = false,
+
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Notifications.Add(notification);
+
+
+            // Save interview changes + notification
             await _context.SaveChangesAsync();
+
 
             TempData["SuccessMessage"] =
                 "Interview rescheduled successfully.";
 
+
             return RedirectToAction(nameof(Interviews));
         }
+
+
+
 
         //----------------------------------------------------------------------------------------------------------------------------
 

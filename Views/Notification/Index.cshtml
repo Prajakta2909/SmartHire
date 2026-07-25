@@ -1,0 +1,84 @@
+﻿@model IEnumerable<SmartHire.Models.Notification>
+
+@{
+    ViewData["Title"] = "Notifications";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Notifications</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            You don't have any notifications yet.
+        </div>
+    }
+    else
+    {
+        <div class="list-group">
+
+            @foreach (var notification in Model)
+            {
+                <div class="list-group-item">
+
+                    <div class="d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            @if (!notification.IsRead)
+                            {
+                                <span class="badge bg-primary me-2">
+                                    New
+                                </span>
+                            }
+
+                            <strong>
+                                @notification.Message
+                            </strong>
+
+                            <div class="mt-2">
+
+                                @if (!notification.IsRead)
+                                {
+                                    <form asp-action="MarkAsRead"
+                                          method="post"
+                                          class="d-inline">
+
+                                        <input type="hidden"
+                                               name="id"
+                                               value="@notification.Id" />
+
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-primary">
+                                            Mark as Read
+                                        </button>
+
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        Read
+                                    </span>
+                                }
+
+                            </div>
+
+                        </div>
+
+                        <small class="text-muted">
+                            @(notification.CreatedAt
+                                .ToLocalTime()
+                                .ToString("dd MMM yyyy hh:mm tt"))
+                        </small>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
