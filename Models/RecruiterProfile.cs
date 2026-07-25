@@ -28,5 +28,7 @@ namespace SmartHire.Models
 
         // Navigation Property
         public ApplicationUser ApplicationUser { get; set; } = null!;
+
+        public ICollection<Job> Jobs { get; set; } = new List<Job>();
     }
 }
