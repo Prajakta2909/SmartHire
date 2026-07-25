@@ -1,8 +1,69 @@
-﻿@{
+﻿@model SmartHire.ViewModels.AdminDashboardViewModel
+
+@{
     ViewData["Title"] = "Admin Dashboard";
 }
 
 <div class="container mt-4">
-    <h2>Admin Dashboard</h2>
-    <p>Welcome to your SmartHire admin dashboard.</p>
+
+    <h2 class="mb-4">Admin Dashboard</h2>
+
+    <div class="row">
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Total Users</h5>
+                    <h2>@Model.TotalUsers</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Candidates</h5>
+                    <h2>@Model.TotalCandidates</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Recruiters</h5>
+                    <h2>@Model.TotalRecruiters</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Total Jobs</h5>
+                    <h2>@Model.TotalJobs</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Active Jobs</h5>
+                    <h2>@Model.ActiveJobs</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow-sm text-center h-100">
+                <div class="card-body">
+                    <h5>Applications</h5>
+                    <h2>@Model.TotalApplications</h2>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
 </div>

@@ -25,8 +25,7 @@
 
     <header>
 
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm
-            navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
 
             <div class="container-fluid">
 
@@ -51,134 +50,197 @@
                 </button>
 
 
-                <div class="navbar-collapse collapse
-                    d-sm-inline-flex justify-content-between">
-
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
 
                     <!-- LEFT SIDE NAVIGATION -->
 
                     <ul class="navbar-nav flex-grow-1">
 
+                        <!-- Home -->
                         <li class="nav-item">
+
                             <a class="nav-link text-dark"
                                asp-controller="Home"
                                asp-action="Index">
                                 Home
                             </a>
+
                         </li>
 
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
+
+                        @if (User.Identity != null &&
+                             User.Identity.IsAuthenticated)
                         {
+
+                            <!-- ========================= -->
+                            <!-- CANDIDATE NAVIGATION -->
+                            <!-- ========================= -->
                             @if (User.IsInRole("Candidate"))
                             {
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark"
                                        asp-controller="Candidate"
                                        asp-action="Dashboard">
                                         Dashboard
                                     </a>
+
                                 </li>
 
+
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark"
                                        asp-controller="Candidate"
                                        asp-action="BrowseJobs">
                                         Browse Jobs
                                     </a>
+
                                 </li>
 
+
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark"
                                        asp-controller="Candidate"
                                        asp-action="MyApplications">
                                         My Applications
                                     </a>
+
                                 </li>
 
+
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark"
                                        asp-controller="Candidate"
                                        asp-action="Profile">
                                         Profile
                                     </a>
+
                                 </li>
 
+
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark"
                                        asp-controller="Candidate"
                                        asp-action="UploadResume">
                                         Resume
                                     </a>
+
                                 </li>
                             }
 
+
+                            <!-- ========================= -->
+                            <!-- RECRUITER NAVIGATION -->
+                            <!-- ========================= -->
                             @if (User.IsInRole("Recruiter"))
                             {
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark"
                                        asp-controller="Recruiter"
                                        asp-action="Dashboard">
                                         Dashboard
                                     </a>
+
                                 </li>
 
+
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark"
                                        asp-controller="Recruiter"
                                        asp-action="CreateJob">
                                         Post Job
                                     </a>
+
                                 </li>
 
+
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark"
                                        asp-controller="Recruiter"
                                        asp-action="MyJobs">
                                         My Jobs
                                     </a>
+
                                 </li>
 
+
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark"
                                        asp-controller="Recruiter"
                                        asp-action="Interviews">
                                         Interviews
                                     </a>
+
                                 </li>
 
+
                                 <li class="nav-item">
+
                                     <a class="nav-link text-dark"
                                        asp-controller="Recruiter"
                                        asp-action="Profile">
                                         Company Profile
                                     </a>
+
+                                </li>
+                            }
+
+
+                            <!-- ========================= -->
+                            <!-- ADMIN NAVIGATION -->
+                            <!-- ========================= -->
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Admin"
+                                       asp-action="Dashboard">
+                                        Admin Dashboard
+                                    </a>
                                 </li>
 
-                                
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Admin"
+                                       asp-action="Users">
+                                        Manage Users
+                                    </a>
+                                </li>
+
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark"
+                                       asp-controller="Admin"
+                                       asp-action="Jobs">
+                                        Manage Jobs
+                                    </a>
+                                </li>
                             }
                         }
 
                     </ul>
 
 
-
-
                     <!-- RIGHT SIDE NAVIGATION -->
 
                     <ul class="navbar-nav">
 
-
                         @if (User.Identity != null &&
                              User.Identity.IsAuthenticated)
                         {
-                            <!-- User is logged in -->
+                            <!-- Logged-in User -->
 
                             <li class="nav-item">
 
                                 <span class="nav-link text-dark">
-
                                     Hello, @User.Identity.Name
-
                                 </span>
 
                             </li>
@@ -192,16 +254,13 @@
 
                                     <button type="submit"
                                             class="nav-link btn btn-link text-dark">
-
                                         Logout
-
                                     </button>
 
                                 </form>
 
                             </li>
                         }
-
                         else
                         {
                             <!-- User is NOT logged in -->
@@ -211,9 +270,7 @@
                                 <a class="nav-link text-dark"
                                    asp-controller="Account"
                                    asp-action="Login">
-
                                     Login
-
                                 </a>
 
                             </li>
@@ -224,14 +281,11 @@
                                 <a class="nav-link text-dark"
                                    asp-controller="Account"
                                    asp-action="Register">
-
                                     Register
-
                                 </a>
 
                             </li>
                         }
-
 
                     </ul>
 
@@ -267,9 +321,7 @@
 
             <a asp-controller="Home"
                asp-action="Privacy">
-
                 Privacy
-
             </a>
 
         </div>
@@ -286,7 +338,6 @@
     <script src="~/js/site.js"
             asp-append-version="true">
     </script>
-
 
     @await RenderSectionAsync("Scripts", required: false)
 

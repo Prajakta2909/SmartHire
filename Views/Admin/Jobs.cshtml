@@ -1,0 +1,135 @@
+﻿@model IEnumerable<SmartHire.Models.Job>
+
+@{
+    ViewData["Title"] = "Manage Jobs";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <h2>Manage Jobs</h2>
+
+        <a asp-action="Dashboard"
+           class="btn btn-secondary">
+            Back to Dashboard
+        </a>
+
+    </div>
+
+
+    @* Success Message *@
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No jobs have been posted yet.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Company</th>
+                        <th>Location</th>
+                        <th>Posted</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var job in Model)
+                    {
+                        <tr>
+
+                            <td>
+                                @job.Title
+                            </td>
+
+                            <td>
+                                @job.RecruiterProfile.CompanyName
+                            </td>
+
+                            <td>
+                                @job.Location
+                            </td>
+
+                            <td>
+                                @(job.PostedDate.ToString("dd MMM yyyy"))
+                            </td>
+
+
+                            @* Job Status *@
+                            <td>
+
+                                @if (job.IsActive)
+                                {
+                                    <span class="badge bg-success">
+                                        Active
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        Closed
+                                    </span>
+                                }
+
+                            </td>
+
+
+                            @* Admin Action *@
+                            <td>
+
+                                <form asp-action="ToggleJobStatus"
+                                      method="post"
+                                      class="d-inline">
+
+                                    <input type="hidden"
+                                           name="id"
+                                           value="@job.Id" />
+
+                                    @if (job.IsActive)
+                                    {
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger">
+                                            Close Job
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="submit"
+                                                class="btn btn-sm btn-success">
+                                            Reopen Job
+                                        </button>
+                                    }
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+
+</div>
