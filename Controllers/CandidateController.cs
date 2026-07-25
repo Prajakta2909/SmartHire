@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using SmartHire.Data;
 using SmartHire.Models;
 using SmartHire.ViewModels;
+using SmartHire.Services;
 
 namespace SmartHire.Controllers
 {
@@ -14,15 +15,18 @@ namespace SmartHire.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _environment;
+        private readonly IEmailService _emailService;
 
         public CandidateController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _environment = environment;
+            _emailService = emailService;
         }
 
 
@@ -426,9 +430,11 @@ namespace SmartHire.Controllers
                 return RedirectToAction(nameof(UploadResume));
             }
 
-            // Get active job
+
+            // Get active job + recruiter + recruiter user account
             var job = await _context.Jobs
                 .Include(j => j.RecruiterProfile)
+                    .ThenInclude(r => r.ApplicationUser)
                 .FirstOrDefaultAsync(j =>
                     j.Id == id &&
                     j.IsActive);
@@ -437,6 +443,7 @@ namespace SmartHire.Controllers
             {
                 return NotFound();
             }
+
 
             // Check application deadline
             if (job.ApplicationDeadline.HasValue &&
@@ -449,6 +456,7 @@ namespace SmartHire.Controllers
                     nameof(JobDetails),
                     new { id });
             }
+
 
             // Prevent duplicate application
             var alreadyApplied = await _context.JobApplications
@@ -466,6 +474,7 @@ namespace SmartHire.Controllers
                     new { id });
             }
 
+
             // Create application
             var application = new JobApplication
             {
@@ -478,11 +487,13 @@ namespace SmartHire.Controllers
             _context.JobApplications.Add(application);
 
 
-            // Create notification for recruiter
+            // Candidate name
             var candidateName =
                 $"{candidateProfile.ApplicationUser.FirstName} " +
                 $"{candidateProfile.ApplicationUser.LastName}";
 
+
+            // Create in-app notification for recruiter
             var notification = new Notification
             {
                 UserId = job.RecruiterProfile.ApplicationUserId,
@@ -498,8 +509,42 @@ namespace SmartHire.Controllers
             _context.Notifications.Add(notification);
 
 
-            // Save application + notification together
+            // Save application + in-app notification
             await _context.SaveChangesAsync();
+
+
+            // Send email notification to recruiter
+            var recruiterEmail =
+                job.RecruiterProfile.ApplicationUser.Email;
+
+            if (!string.IsNullOrWhiteSpace(recruiterEmail))
+            {
+                await _emailService.SendEmailAsync(
+                    recruiterEmail,
+
+                    $"New Application - {job.Title}",
+
+                    $@"
+                <h2>New Job Application</h2>
+
+                <p>
+                    <strong>{candidateName}</strong>
+                    has applied for
+                    <strong>{job.Title}</strong>.
+                </p>
+
+                <p>
+                    Login to SmartHire to view the candidate's
+                    application and resume.
+                </p>
+
+                <p>
+                    Regards,<br/>
+                    SmartHire Recruitment System
+                </p>
+            "
+                );
+            }
 
 
             TempData["SuccessMessage"] =
@@ -509,8 +554,6 @@ namespace SmartHire.Controllers
                 nameof(JobDetails),
                 new { id });
         }
-
-
 
 
 

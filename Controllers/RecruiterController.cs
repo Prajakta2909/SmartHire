@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SmartHire.Data;
 using SmartHire.Models;
+using SmartHire.Services;
 using SmartHire.ViewModels;
+using SmartHire.Services;
 
 namespace SmartHire.Controllers
 {
@@ -14,15 +16,18 @@ namespace SmartHire.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _environment;
+        private readonly IEmailService _emailService;
 
         public RecruiterController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment environment)
+            IWebHostEnvironment environment,
+            IEmailService emailService)
         {
             _context = context;
             _userManager = userManager;
             _environment = environment;
+            _emailService = emailService;
         }
 
 
@@ -630,8 +635,8 @@ namespace SmartHire.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateApplicationStatus(
-     int id,
-     string status)
+    int id,
+    string status)
         {
             var userId = _userManager.GetUserId(User);
 
@@ -660,7 +665,7 @@ namespace SmartHire.Controllers
                 return BadRequest("Invalid application status.");
             }
 
-            // Load Job + Candidate + Candidate's ApplicationUser
+            // Load Job + Candidate + Candidate User
             var application = await _context.JobApplications
                 .Include(a => a.Job)
                 .Include(a => a.CandidateProfile)
@@ -686,7 +691,7 @@ namespace SmartHire.Controllers
                     new { id = application.Id });
             }
 
-            // Update application status
+            // Update status
             application.Status = status;
 
 
@@ -710,7 +715,7 @@ namespace SmartHire.Controllers
             }
 
 
-            // Create notification for candidate
+            // Create in-app notification
             var notification = new Notification
             {
                 UserId = application.CandidateProfile.ApplicationUserId,
@@ -722,8 +727,56 @@ namespace SmartHire.Controllers
             _context.Notifications.Add(notification);
 
 
-            // Save status + notification together
+            // Save status + notification
             await _context.SaveChangesAsync();
+
+
+            // Get candidate email
+            var candidateEmail =
+                application.CandidateProfile.ApplicationUser.Email;
+
+            if (!string.IsNullOrWhiteSpace(candidateEmail))
+            {
+                string emailSubject;
+
+                if (status == "Shortlisted")
+                {
+                    emailSubject =
+                        $"Application Shortlisted - {application.Job.Title}";
+                }
+                else if (status == "Selected")
+                {
+                    emailSubject =
+                        $"Congratulations! Selected - {application.Job.Title}";
+                }
+                else
+                {
+                    emailSubject =
+                        $"Application Update - {application.Job.Title}";
+                }
+
+
+                // Send email
+                await _emailService.SendEmailAsync(
+                    candidateEmail,
+                    emailSubject,
+                    $@"
+                <h2>SmartHire Application Update</h2>
+
+                <p>{notificationMessage}</p>
+
+                <p>
+                    Login to SmartHire to view your
+                    application details.
+                </p>
+
+                <p>
+                    Regards,<br/>
+                    SmartHire Recruitment System
+                </p>
+            "
+                );
+            }
 
 
             TempData["SuccessMessage"] =
@@ -879,11 +932,12 @@ namespace SmartHire.Controllers
             }
 
 
-            // Get application + job + interview + candidate
+            // Get application + job + interview + candidate + candidate user
             var application = await _context.JobApplications
                 .Include(a => a.Job)
                 .Include(a => a.Interview)
                 .Include(a => a.CandidateProfile)
+                    .ThenInclude(c => c.ApplicationUser)
                 .FirstOrDefaultAsync(a =>
                     a.Id == model.JobApplicationId &&
                     a.Job.RecruiterProfileId == recruiterProfile.Id);
@@ -947,7 +1001,7 @@ namespace SmartHire.Controllers
             application.Status = "Interview Scheduled";
 
 
-            // Create notification for candidate
+            // Create in-app notification for candidate
             var notification = new Notification
             {
                 UserId = application.CandidateProfile.ApplicationUserId,
@@ -967,6 +1021,53 @@ namespace SmartHire.Controllers
 
             // Save interview + status + notification
             await _context.SaveChangesAsync();
+
+
+            // Send email to candidate
+            var candidateEmail =
+                application.CandidateProfile.ApplicationUser.Email;
+
+            if (!string.IsNullOrWhiteSpace(candidateEmail))
+            {
+                await _emailService.SendEmailAsync(
+                    candidateEmail,
+
+                    $"Interview Scheduled - {application.Job.Title}",
+
+                    $@"
+                <h2>Interview Scheduled</h2>
+
+                <p>
+                    Your interview for
+                    <strong>{application.Job.Title}</strong>
+                    has been scheduled.
+                </p>
+
+                <p>
+                    <strong>Date & Time:</strong>
+                    {model.ScheduledDateTime:dd MMM yyyy hh:mm tt}
+                </p>
+
+                <p>
+                    <strong>Mode:</strong>
+                    {model.InterviewMode}
+                </p>
+
+                {(model.InterviewMode == "Online"
+                            ? $"<p><strong>Meeting Link:</strong> {model.MeetingLink}</p>"
+                            : $"<p><strong>Location:</strong> {model.Location}</p>")}
+
+                <p>
+                    Login to SmartHire for complete interview details.
+                </p>
+
+                <p>
+                    Regards,<br/>
+                    SmartHire Recruitment System
+                </p>
+            "
+                );
+            }
 
 
             TempData["SuccessMessage"] =
@@ -1124,7 +1225,6 @@ namespace SmartHire.Controllers
                 return View(model);
             }
 
-
             // Get logged-in recruiter
             var userId = _userManager.GetUserId(User);
 
@@ -1142,13 +1242,13 @@ namespace SmartHire.Controllers
                 return RedirectToAction(nameof(Profile));
             }
 
-
-            // Get interview + job + candidate
+            // Get interview + job + candidate + candidate user
             var interview = await _context.Interviews
                 .Include(i => i.JobApplication)
                     .ThenInclude(a => a.Job)
                 .Include(i => i.JobApplication)
                     .ThenInclude(a => a.CandidateProfile)
+                        .ThenInclude(c => c.ApplicationUser)
                 .FirstOrDefaultAsync(i =>
                     i.Id == interviewId &&
                     i.JobApplication.Job.RecruiterProfileId
@@ -1159,10 +1259,8 @@ namespace SmartHire.Controllers
                 return NotFound();
             }
 
-
             // Update interview
             interview.ScheduledDateTime = model.ScheduledDateTime;
-
             interview.InterviewMode = model.InterviewMode;
 
             interview.MeetingLink =
@@ -1177,8 +1275,7 @@ namespace SmartHire.Controllers
 
             interview.Instructions = model.Instructions;
 
-
-            // Create notification for candidate
+            // Create in-app notification for candidate
             var notification = new Notification
             {
                 UserId =
@@ -1193,23 +1290,69 @@ namespace SmartHire.Controllers
                     $"{model.ScheduledDateTime:dd MMM yyyy hh:mm tt}.",
 
                 IsRead = false,
-
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.Notifications.Add(notification);
 
-
             // Save interview changes + notification
             await _context.SaveChangesAsync();
 
+            // Send email to candidate
+            var candidateEmail =
+                interview.JobApplication
+                    .CandidateProfile
+                    .ApplicationUser.Email;
+
+            if (!string.IsNullOrWhiteSpace(candidateEmail))
+            {
+                await _emailService.SendEmailAsync(
+                    candidateEmail,
+
+                    $"Interview Rescheduled - {interview.JobApplication.Job.Title}",
+
+                    $@"
+                <h2>Interview Rescheduled</h2>
+
+                <p>
+                    Your interview for
+                    <strong>{interview.JobApplication.Job.Title}</strong>
+                    has been rescheduled.
+                </p>
+
+                <p>
+                    <strong>New Date & Time:</strong>
+                    {model.ScheduledDateTime:dd MMM yyyy hh:mm tt}
+                </p>
+
+                <p>
+                    <strong>Mode:</strong>
+                    {model.InterviewMode}
+                </p>
+
+                {(model.InterviewMode == "Online"
+                            ? $"<p><strong>Meeting Link:</strong> {model.MeetingLink}</p>"
+                            : $"<p><strong>Location:</strong> {model.Location}</p>")}
+
+                <p>
+                    Login to SmartHire for complete interview details.
+                </p>
+
+                <p>
+                    Regards,<br/>
+                    SmartHire Recruitment System
+                </p>
+            "
+                );
+            }
 
             TempData["SuccessMessage"] =
                 "Interview rescheduled successfully.";
 
-
             return RedirectToAction(nameof(Interviews));
         }
+
+
 
 
 
