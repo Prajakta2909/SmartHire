@@ -112,7 +112,18 @@
                                         Job Closed
                                     </span>
                                 }
+
+                                @if (application.Status == "Interview Scheduled")
+                                {
+                                    <a asp-action="InterviewDetails"
+                                       asp-route-id="@application.Id"
+                                       class="btn btn-sm btn-success">
+                                        Interview Details
+                                    </a>
+                                }
                             </td>
+
+
 
                         </tr>
                     }

@@ -17,6 +17,7 @@ namespace SmartHire.Data
         public DbSet<Job> Jobs { get; set; }
         public DbSet<CandidateProfile> CandidateProfiles { get; set; }
         public DbSet<JobApplication> JobApplications { get; set; }
+        public DbSet<Interview> Interviews { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -80,6 +81,14 @@ namespace SmartHire.Data
                     a.JobId
                 })
                 .IsUnique();
+
+
+
+            builder.Entity<Interview>()
+                .HasOne(i => i.JobApplication)
+                .WithOne(a => a.Interview)
+                .HasForeignKey<Interview>(i => i.JobApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
 
 
 

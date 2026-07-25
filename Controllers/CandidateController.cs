@@ -480,6 +480,48 @@ int pageNumber = 1)
         //-------------------------------------------------------------------------------------------------------------------------------------------
 
 
+        [HttpGet]
+        public async Task<IActionResult> InterviewDetails(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var candidateProfile = await _context.CandidateProfiles
+                .FirstOrDefaultAsync(c => c.ApplicationUserId == userId);
+
+            if (candidateProfile == null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var application = await _context.JobApplications
+                .Include(a => a.Job)
+                    .ThenInclude(j => j.RecruiterProfile)
+                .Include(a => a.Interview)
+                .FirstOrDefaultAsync(a =>
+                    a.Id == id &&
+                    a.CandidateProfileId == candidateProfile.Id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            if (application.Interview == null)
+            {
+                return NotFound("Interview has not been scheduled.");
+            }
+
+            return View(application);
+        }
+
+
+        //----------------------------------------------------------------------------------------------------------------------------------------------
+
 
     }
 }

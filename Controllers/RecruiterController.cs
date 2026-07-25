@@ -608,6 +608,211 @@ namespace SmartHire.Controllers
         //---------------------------------------------------------------------------------------------------------------------------------------------
 
 
+        [HttpGet]
+        public async Task<IActionResult> ScheduleInterview(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+
+            if (recruiterProfile == null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var application = await _context.JobApplications
+                .Include(a => a.Job)
+                .Include(a => a.Interview)
+                .FirstOrDefaultAsync(a =>
+                    a.Id == id &&
+                    a.Job.RecruiterProfileId == recruiterProfile.Id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            // Only shortlisted candidates can be scheduled
+            if (application.Status != "Shortlisted")
+            {
+                TempData["ErrorMessage"] =
+                    "Only shortlisted candidates can be scheduled for an interview.";
+
+                return RedirectToAction(
+                    nameof(ApplicationDetails),
+                    new { id });
+            }
+
+            // Prevent creating a second interview
+            if (application.Interview != null)
+            {
+                TempData["ErrorMessage"] =
+                    "An interview has already been scheduled for this candidate.";
+
+                return RedirectToAction(
+                    nameof(ApplicationDetails),
+                    new { id });
+            }
+
+            var model = new ScheduleInterviewViewModel
+            {
+                JobApplicationId = application.Id
+            };
+
+            return View(model);
+        }
+
+
+        //-------------------------------------------------------------------------------------------------------------------------------------------
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ScheduleInterview(
+    ScheduleInterviewViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // Interview must be scheduled in the future
+            if (model.ScheduledDateTime <= DateTime.Now)
+            {
+                ModelState.AddModelError(
+                    nameof(model.ScheduledDateTime),
+                    "Interview date and time must be in the future.");
+
+                return View(model);
+            }
+
+            // Validate interview mode
+            var allowedModes = new[]
+            {
+        "Online",
+        "In Person"
+    };
+
+            if (!allowedModes.Contains(model.InterviewMode))
+            {
+                ModelState.AddModelError(
+                    nameof(model.InterviewMode),
+                    "Please select a valid interview mode.");
+
+                return View(model);
+            }
+
+            // Online interview requires meeting link
+            if (model.InterviewMode == "Online" &&
+                string.IsNullOrWhiteSpace(model.MeetingLink))
+            {
+                ModelState.AddModelError(
+                    nameof(model.MeetingLink),
+                    "Meeting link is required for an online interview.");
+
+                return View(model);
+            }
+
+            // In-person interview requires location
+            if (model.InterviewMode == "In Person" &&
+                string.IsNullOrWhiteSpace(model.Location))
+            {
+                ModelState.AddModelError(
+                    nameof(model.Location),
+                    "Location is required for an in-person interview.");
+
+                return View(model);
+            }
+
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r =>
+                    r.ApplicationUserId == userId);
+
+            if (recruiterProfile == null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var application = await _context.JobApplications
+                .Include(a => a.Job)
+                .Include(a => a.Interview)
+                .FirstOrDefaultAsync(a =>
+                    a.Id == model.JobApplicationId &&
+                    a.Job.RecruiterProfileId == recruiterProfile.Id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            if (application.Status != "Shortlisted")
+            {
+                TempData["ErrorMessage"] =
+                    "Only shortlisted candidates can be scheduled for an interview.";
+
+                return RedirectToAction(
+                    nameof(ApplicationDetails),
+                    new { id = application.Id });
+            }
+
+            if (application.Interview != null)
+            {
+                TempData["ErrorMessage"] =
+                    "An interview has already been scheduled for this candidate.";
+
+                return RedirectToAction(
+                    nameof(ApplicationDetails),
+                    new { id = application.Id });
+            }
+
+            var interview = new Interview
+            {
+                JobApplicationId = application.Id,
+                ScheduledDateTime = model.ScheduledDateTime,
+                InterviewMode = model.InterviewMode,
+
+                MeetingLink = model.InterviewMode == "Online"
+                    ? model.MeetingLink
+                    : null,
+
+                Location = model.InterviewMode == "In Person"
+                    ? model.Location
+                    : null,
+
+                Instructions = model.Instructions,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            _context.Interviews.Add(interview);
+
+            // Candidate will now see this status
+            application.Status = "Interview Scheduled";
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] =
+                "Interview scheduled successfully.";
+
+            return RedirectToAction(
+                nameof(ApplicationDetails),
+                new { id = application.Id });
+        }
+
+
+        //------------------------------------------------------------------------------------------------------------------------------
+
 
     }
 }

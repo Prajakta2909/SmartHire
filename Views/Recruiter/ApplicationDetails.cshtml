@@ -128,28 +128,41 @@
             }
             else
             {
-                <p class="text-muted">Resume not available.</p>
+                <p class="text-muted">
+                    Resume not available.
+                </p>
             }
 
             <hr />
 
-
             @if (TempData["SuccessMessage"] != null)
             {
-                <div class="alert alert-success mt-3">
+                <div class="alert alert-success">
                     @TempData["SuccessMessage"]
                 </div>
             }
 
-            <div class="mt-4 mb-3">
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
 
-                <h4>Application Decision</h4>
+            <h4>Application Decision</h4>
 
-                <p>
-                    Current Status:
-                    <strong>@Model.Status</strong>
-                </p>
+            <p>
+                Current Status:
+                <strong>@Model.Status</strong>
+            </p>
 
+
+            @* =========================
+               STATUS = APPLIED
+               ========================= *@
+
+            @if (Model.Status == "Applied")
+            {
                 <form asp-action="UpdateApplicationStatus"
                       method="post"
                       class="d-inline">
@@ -188,16 +201,107 @@
                     </button>
 
                 </form>
+            }
+
+
+            @* =========================
+               STATUS = SHORTLISTED
+               ========================= *@
+
+            @if (Model.Status == "Shortlisted")
+            {
+                <a asp-action="ScheduleInterview"
+                   asp-route-id="@Model.Id"
+                   class="btn btn-primary">
+                    Schedule Interview
+                </a>
+            }
+
+
+            @* =========================
+               STATUS = INTERVIEW SCHEDULED
+               ========================= *@
+
+            @if (Model.Status == "Interview Scheduled")
+            {
+                <h4 class="mt-4">
+                    Final Decision
+                </h4>
+
+                <form asp-action="UpdateApplicationStatus"
+                      method="post"
+                      class="d-inline">
+
+                    <input type="hidden"
+                           name="id"
+                           value="@Model.Id" />
+
+                    <input type="hidden"
+                           name="status"
+                           value="Selected" />
+
+                    <button type="submit"
+                            class="btn btn-success">
+                        Select Candidate
+                    </button>
+
+                </form>
+
+
+                <form asp-action="UpdateApplicationStatus"
+                      method="post"
+                      class="d-inline">
+
+                    <input type="hidden"
+                           name="id"
+                           value="@Model.Id" />
+
+                    <input type="hidden"
+                           name="status"
+                           value="Rejected" />
+
+                    <button type="submit"
+                            class="btn btn-danger">
+                        Reject Candidate
+                    </button>
+
+                </form>
+            }
+
+
+            @* =========================
+               STATUS = SELECTED
+               ========================= *@
+
+            @if (Model.Status == "Selected")
+            {
+                <div class="alert alert-success mt-3">
+                    Candidate has been selected.
+                </div>
+            }
+
+
+            @* =========================
+               STATUS = REJECTED
+               ========================= *@
+
+            @if (Model.Status == "Rejected")
+            {
+                <div class="alert alert-danger mt-3">
+                    Candidate has been rejected.
+                </div>
+            }
+
+
+            <div class="mt-4">
+
+                <a asp-action="JobApplications"
+                   asp-route-id="@Model.JobId"
+                   class="btn btn-secondary">
+                    Back to Applications
+                </a>
 
             </div>
-
-
-
-            <a asp-action="JobApplications"
-               asp-route-id="@Model.JobId"
-               class="btn btn-secondary">
-                Back to Applications
-            </a>
 
         </div>
     </div>

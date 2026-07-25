@@ -1,0 +1,143 @@
+﻿@model SmartHire.ViewModels.ScheduleInterviewViewModel
+
+@{
+    ViewData["Title"] = "Schedule Interview";
+}
+
+<div class="container mt-4">
+
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+
+            <div class="card shadow">
+                <div class="card-body p-4">
+
+                    <h2 class="mb-4">Schedule Interview</h2>
+
+                    <form asp-action="ScheduleInterview"
+                          method="post">
+
+                        <input asp-for="JobApplicationId"
+                               type="hidden" />
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3">
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="ScheduledDateTime"
+                                   class="form-label"></label>
+
+                            <input asp-for="ScheduledDateTime"
+                                   type="datetime-local"
+                                   class="form-control" />
+
+                            <span asp-validation-for="ScheduledDateTime"
+                                  class="text-danger"></span>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="InterviewMode"
+                                   class="form-label"></label>
+
+                            <select asp-for="InterviewMode"
+                                    class="form-select">
+
+                                <option value="">
+                                    -- Select Mode --
+                                </option>
+
+                                <option value="Online">
+                                    Online
+                                </option>
+
+                                <option value="In Person">
+                                    In Person
+                                </option>
+
+                            </select>
+
+                            <span asp-validation-for="InterviewMode"
+                                  class="text-danger"></span>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="MeetingLink"
+                                   class="form-label"></label>
+
+                            <input asp-for="MeetingLink"
+                                   class="form-control"
+                                   placeholder="e.g. Microsoft Teams / Google Meet link" />
+
+                            <span asp-validation-for="MeetingLink"
+                                  class="text-danger"></span>
+
+                            <small class="text-muted">
+                                Required for online interviews.
+                            </small>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="Location"
+                                   class="form-label"></label>
+
+                            <input asp-for="Location"
+                                   class="form-control"
+                                   placeholder="e.g. Pune Office, Conference Room 2" />
+
+                            <span asp-validation-for="Location"
+                                  class="text-danger"></span>
+
+                            <small class="text-muted">
+                                Required for in-person interviews.
+                            </small>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="Instructions"
+                                   class="form-label"></label>
+
+                            <textarea asp-for="Instructions"
+                                      class="form-control"
+                                      rows="4"
+                                      placeholder="e.g. Please join 10 minutes early and keep your resume ready.">
+                            </textarea>
+
+                            <span asp-validation-for="Instructions"
+                                  class="text-danger"></span>
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary">
+                            Schedule Interview
+                        </button>
+
+                        <a asp-action="ApplicationDetails"
+                           asp-route-id="@Model.JobApplicationId"
+                           class="btn btn-secondary">
+                            Cancel
+                        </a>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -21,5 +21,7 @@ namespace SmartHire.Models
         public int JobId { get; set; }
 
         public Job Job { get; set; } = null!;
+
+        public Interview? Interview { get; set; }
     }
 }
