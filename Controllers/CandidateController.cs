@@ -16,17 +16,20 @@ namespace SmartHire.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _environment;
         private readonly IEmailService _emailService;
+        private readonly IJobMatchingService _jobMatchingService;
 
         public CandidateController(
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment environment,
-            IEmailService emailService)
+             ApplicationDbContext context,
+             UserManager<ApplicationUser> userManager,
+             IWebHostEnvironment environment,
+             IEmailService emailService,
+             IJobMatchingService jobMatchingService)
         {
             _context = context;
             _userManager = userManager;
             _environment = environment;
             _emailService = emailService;
+            _jobMatchingService = jobMatchingService;
         }
 
 
@@ -307,7 +310,7 @@ namespace SmartHire.Controllers
             string? location,
             string? employmentType,
             int pageNumber = 1)
-        {
+            {
             const int pageSize = 5;
 
             if (pageNumber < 1)
@@ -315,9 +318,24 @@ namespace SmartHire.Controllers
                 pageNumber = 1;
             }
 
+
+            // Get logged-in candidate
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var candidateProfile = await _context.CandidateProfiles
+                .FirstOrDefaultAsync(c =>
+                    c.ApplicationUserId == userId);
+
+
             var query = _context.Jobs
                 .Include(j => j.RecruiterProfile)
                 .Where(j => j.IsActive);
+
 
             // Search by title or skills
             if (!string.IsNullOrWhiteSpace(searchTerm))
@@ -328,12 +346,14 @@ namespace SmartHire.Controllers
                      j.RequiredSkills.Contains(searchTerm)));
             }
 
+
             // Filter by location
             if (!string.IsNullOrWhiteSpace(location))
             {
                 query = query.Where(j =>
                     j.Location.Contains(location));
             }
+
 
             // Filter by employment type
             if (!string.IsNullOrWhiteSpace(employmentType))
@@ -342,32 +362,71 @@ namespace SmartHire.Controllers
                     j.EmploymentType == employmentType);
             }
 
+
+            // Count jobs
             var totalJobs = await query.CountAsync();
 
             var totalPages = (int)Math.Ceiling(
                 totalJobs / (double)pageSize);
 
-            if (totalPages > 0 && pageNumber > totalPages)
+
+            if (totalPages > 0 &&
+                pageNumber > totalPages)
             {
                 pageNumber = totalPages;
             }
 
+
+            // Get jobs for current page
             var jobs = await query
                 .OrderByDescending(j => j.PostedDate)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
+
+            // =========================
+            // CALCULATE JOB MATCHES
+            // =========================
+
+            var jobMatches =
+                new Dictionary<int, JobMatchViewModel>();
+
+
+            if (candidateProfile != null)
+            {
+                foreach (var job in jobs)
+                {
+                    var match =
+                        _jobMatchingService.CalculateMatch(
+                            job,
+                            candidateProfile);
+
+                    jobMatches[job.Id] = match;
+                }
+            }
+
+
+            // Create view model
             var model = new JobSearchViewModel
             {
                 SearchTerm = searchTerm,
+
                 Location = location,
+
                 EmploymentType = employmentType,
+
                 PageNumber = pageNumber,
+
                 PageSize = pageSize,
+
                 TotalPages = totalPages,
-                Jobs = jobs
+
+                Jobs = jobs,
+
+                JobMatches = jobMatches
             };
+
 
             return View(model);
         }
@@ -391,8 +450,43 @@ namespace SmartHire.Controllers
                 return NotFound();
             }
 
-            return View(job);
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var candidateProfile = await _context.CandidateProfiles
+                .FirstOrDefaultAsync(c =>
+                    c.ApplicationUserId == userId);
+
+            JobMatchViewModel? match = null;
+            bool alreadyApplied = false;
+
+            if (candidateProfile != null)
+            {
+                match = _jobMatchingService.CalculateMatch(
+                    job,
+                    candidateProfile);
+
+                alreadyApplied = await _context.JobApplications
+                    .AnyAsync(a =>
+                        a.JobId == job.Id &&
+                        a.CandidateProfileId == candidateProfile.Id);
+            }
+
+            var model = new JobDetailsViewModel
+            {
+                Job = job,
+                Match = match,
+                AlreadyApplied = alreadyApplied
+            };
+
+            return View(model);
         }
+
+
 
         //--------------------------------------------------------------------------------------------------------------------------------------
 

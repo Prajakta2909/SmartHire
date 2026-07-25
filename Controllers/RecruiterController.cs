@@ -17,17 +17,20 @@ namespace SmartHire.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _environment;
         private readonly IEmailService _emailService;
+        private readonly IJobMatchingService _jobMatchingService;
 
         public RecruiterController(
-            ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager,
-            IWebHostEnvironment environment,
-            IEmailService emailService)
+             ApplicationDbContext context,
+             UserManager<ApplicationUser> userManager,
+             IWebHostEnvironment environment,
+             IEmailService emailService,
+             IJobMatchingService jobMatchingService)
         {
             _context = context;
             _userManager = userManager;
             _environment = environment;
             _emailService = emailService;
+            _jobMatchingService = jobMatchingService;
         }
 
 
@@ -552,7 +555,8 @@ namespace SmartHire.Controllers
             }
 
             var recruiterProfile = await _context.RecruiterProfiles
-                .FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+                .FirstOrDefaultAsync(r =>
+                    r.ApplicationUserId == userId);
 
             if (recruiterProfile == null)
             {
@@ -572,8 +576,22 @@ namespace SmartHire.Controllers
                 return NotFound();
             }
 
+
+            // Calculate candidate-job match
+            var match = _jobMatchingService.CalculateMatch(
+                application.Job,
+                application.CandidateProfile);
+
+
+            // Send match information to the view
+            ViewBag.JobMatch = match;
+
+
             return View(application);
         }
+
+
+
 
 
         //------------------------------------------------------------------------------------------------------------------------------------------------------

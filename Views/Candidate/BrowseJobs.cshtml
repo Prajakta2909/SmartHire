@@ -119,47 +119,104 @@
     {
         @foreach (var job in Model.Jobs)
         {
+            var hasMatch =
+                Model.JobMatches.ContainsKey(job.Id);
+
+            SmartHire.ViewModels.JobMatchViewModel? match = null;
+
+            if (hasMatch)
+            {
+                match = Model.JobMatches[job.Id];
+            }
+
+
             <div class="card shadow-sm mb-3">
 
                 <div class="card-body">
 
-                    <div class="d-flex justify-content-between">
+                    <!-- Job Header -->
+
+                    <div class="d-flex justify-content-between align-items-start">
 
                         <div>
-                            <h4>@job.Title</h4>
+
+                            <h4>
+                                @job.Title
+                            </h4>
 
                             <h6 class="text-muted">
                                 @job.RecruiterProfile.CompanyName
                             </h6>
+
                         </div>
 
-                        <span class="badge bg-success align-self-start">
-                            Active
-                        </span>
+
+                        <div class="text-end">
+
+                            <span class="badge bg-success">
+                                Active
+                            </span>
+
+
+                            @if (match != null)
+                            {
+                                <div class="mt-2">
+
+                                    @if (match.MatchPercentage >= 80)
+                                    {
+                                        <span class="badge bg-success">
+                                            @match.MatchPercentage% High Match
+                                        </span>
+                                    }
+                                    else if (match.MatchPercentage >= 50)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            @match.MatchPercentage% Medium Match
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">
+                                            @match.MatchPercentage% Low Match
+                                        </span>
+                                    }
+
+                                </div>
+                            }
+
+                        </div>
 
                     </div>
 
+
                     <hr />
+
+
+                    <!-- Job Information -->
 
                     <p>
                         <strong>Location:</strong>
                         @job.Location
                     </p>
 
+
                     <p>
                         <strong>Employment Type:</strong>
                         @job.EmploymentType
                     </p>
+
 
                     <p>
                         <strong>Experience:</strong>
                         @job.ExperienceRequired year(s)
                     </p>
 
+
                     <p>
                         <strong>Skills:</strong>
                         @(job.RequiredSkills ?? "Not specified")
                     </p>
+
 
                     <p>
                         <strong>Salary:</strong>
@@ -175,19 +232,153 @@
                         }
                         else
                         {
-                            <span>Not disclosed</span>
+                            <span>
+                                Not disclosed
+                            </span>
                         }
+
                     </p>
 
+
+                    <!-- ========================= -->
+                    <!-- JOB MATCHING -->
+                    <!-- ========================= -->
+                    @if (match != null)
+                    {
+                        <div class="card bg-light mb-3">
+
+                            <div class="card-body">
+
+                                <h5>
+                                    Your Job Match
+                                </h5>
+
+
+                                <div class="mb-2">
+
+                                    <div class="d-flex justify-content-between">
+
+                                        <span>
+                                            Overall Match
+                                        </span>
+
+                                        <strong>
+                                            @match.MatchPercentage%
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div class="progress">
+
+                                        <div class="progress-bar"
+                                             role="progressbar"
+                                             style="width: @match.MatchPercentage%;"
+                                             aria-valuenow="@match.MatchPercentage"
+                                             aria-valuemin="0"
+                                             aria-valuemax="100">
+
+                                            @match.MatchPercentage%
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div class="row mt-3">
+
+                                    <div class="col-md-6">
+
+                                        <strong>
+                                            Skills Match:
+                                        </strong>
+
+                                        @match.SkillMatchPercentage%
+
+                                    </div>
+
+
+                                    <div class="col-md-6">
+
+                                        <strong>
+                                            Experience Match:
+                                        </strong>
+
+                                        @match.ExperienceMatchPercentage%
+
+                                    </div>
+
+                                </div>
+
+
+                                @if (match.MatchedSkills.Any())
+                                {
+                                    <div class="mt-3">
+
+                                        <strong>
+                                            Matched Skills:
+                                        </strong>
+
+                                        @foreach (var skill in match.MatchedSkills)
+                                        {
+                                            <span class="badge bg-success me-1">
+                                                @skill
+                                            </span>
+                                        }
+
+                                    </div>
+                                }
+
+
+                                @if (match.MissingSkills.Any())
+                                {
+                                    <div class="mt-2">
+
+                                        <strong>
+                                            Missing Skills:
+                                        </strong>
+
+                                        @foreach (var skill in match.MissingSkills)
+                                        {
+                                            <span class="badge bg-secondary me-1">
+                                                @skill
+                                            </span>
+                                        }
+
+                                    </div>
+                                }
+
+                            </div>
+
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning">
+
+                            Complete your candidate profile
+                            to see your job match score.
+
+                        </div>
+                    }
+
+
                     <p class="text-muted">
+
                         Posted:
                         @job.PostedDate.ToString("dd MMM yyyy")
+
                     </p>
+
 
                     <a asp-action="JobDetails"
                        asp-route-id="@job.Id"
                        class="btn btn-primary">
+
                         View Details
+
                     </a>
 
                 </div>
@@ -196,17 +387,19 @@
         }
 
 
-        <!-- Pagination -->
+        <!-- ========================= -->
+        <!-- PAGINATION -->
+        <!-- ========================= -->
         @if (Model.TotalPages > 1)
         {
             <nav class="mt-4">
 
                 <ul class="pagination justify-content-center">
 
+
                     <!-- Previous -->
 
-                    <li class="page-item
-                        @(Model.PageNumber == 1 ? "disabled" : "")">
+                    <li class="page-item @(Model.PageNumber == 1 ? "disabled" : "")">
 
                         <a class="page-link"
                            asp-action="BrowseJobs"
@@ -223,10 +416,11 @@
 
 
                     <!-- Page Numbers -->
-                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    @for (int i = 1;
+                                              i <= Model.TotalPages;
+                                              i++)
                     {
-                        <li class="page-item
-                            @(i == Model.PageNumber ? "active" : "")">
+                        <li class="page-item @(i == Model.PageNumber ? "active" : "")">
 
                             <a class="page-link"
                                asp-action="BrowseJobs"
@@ -245,8 +439,7 @@
 
                     <!-- Next -->
 
-                    <li class="page-item
-                        @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+                    <li class="page-item @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
 
                         <a class="page-link"
                            asp-action="BrowseJobs"

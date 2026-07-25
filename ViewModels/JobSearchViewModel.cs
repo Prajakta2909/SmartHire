@@ -17,5 +17,8 @@ namespace SmartHire.ViewModels
         public int TotalPages { get; set; }
 
         public List<Job> Jobs { get; set; } = new();
+
+        public Dictionary<int, JobMatchViewModel> JobMatches { get; set; }
+        = new Dictionary<int, JobMatchViewModel>();
     }
 }

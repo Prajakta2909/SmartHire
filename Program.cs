@@ -38,6 +38,7 @@ namespace SmartHire
             builder.Configuration.GetSection("EmailSettings"));
 
             builder.Services.AddScoped<IEmailService, EmailService>();
+            builder.Services.AddScoped<IJobMatchingService, JobMatchingService>();
 
             var app = builder.Build();
 

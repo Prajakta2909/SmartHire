@@ -2,6 +2,9 @@
 
 @{
     ViewData["Title"] = "Application Details";
+
+    var match =
+        ViewBag.JobMatch as SmartHire.ViewModels.JobMatchViewModel;
 }
 
 <div class="container mt-4">
@@ -18,7 +21,8 @@
                     </h2>
 
                     <p class="text-muted">
-                        Applied for: <strong>@Model.Job.Title</strong>
+                        Applied for:
+                        <strong>@Model.Job.Title</strong>
                     </p>
                 </div>
 
@@ -29,6 +33,11 @@
             </div>
 
             <hr />
+
+
+            @* =========================
+               CANDIDATE INFORMATION
+               ========================= *@
 
             <h4>Candidate Information</h4>
 
@@ -93,9 +102,175 @@
 
             <hr />
 
+
+            @* =========================
+               CANDIDATE JOB MATCH
+               ========================= *@
+
+            @if (match != null)
+            {
+                <div class="card bg-light mb-4">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <h4 class="mb-0">
+                                Candidate Job Match
+                            </h4>
+
+                            @if (match.MatchPercentage >= 80)
+                            {
+                                <span class="badge bg-success">
+                                    High Match
+                                </span>
+                            }
+                            else if (match.MatchPercentage >= 50)
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    Medium Match
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">
+                                    Low Match
+                                </span>
+                            }
+
+                        </div>
+
+                        <hr />
+
+                        <div class="mb-3">
+
+                            <div class="d-flex justify-content-between">
+
+                                <strong>
+                                    Overall Match
+                                </strong>
+
+                                <strong>
+                                    @match.MatchPercentage%
+                                </strong>
+
+                            </div>
+
+                            <div class="progress mt-2"
+                                 style="height: 25px;">
+
+                                <div class="progress-bar"
+                                     role="progressbar"
+                                     style="width: @match.MatchPercentage%;"
+                                     aria-valuenow="@match.MatchPercentage"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+
+                                    @match.MatchPercentage%
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="row mt-4">
+
+                            <div class="col-md-6 mb-3">
+
+                                <div class="border rounded p-3">
+
+                                    <strong>
+                                        Skills Match
+                                    </strong>
+
+                                    <h4 class="mt-2 mb-0">
+                                        @match.SkillMatchPercentage%
+                                    </h4>
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <div class="border rounded p-3">
+
+                                    <strong>
+                                        Experience Match
+                                    </strong>
+
+                                    <h4 class="mt-2 mb-0">
+                                        @match.ExperienceMatchPercentage%
+                                    </h4>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        @if (match.MatchedSkills.Any())
+                        {
+                            <div class="mt-2">
+
+                                <strong>
+                                    Matched Skills:
+                                </strong>
+
+                                <div class="mt-2">
+
+                                    @foreach (var skill in match.MatchedSkills)
+                                    {
+                                        <span class="badge bg-success me-1 mb-1">
+                                            @skill
+                                        </span>
+                                    }
+
+                                </div>
+
+                            </div>
+                        }
+
+
+                        @if (match.MissingSkills.Any())
+                        {
+                            <div class="mt-3">
+
+                                <strong>
+                                    Missing Skills:
+                                </strong>
+
+                                <div class="mt-2">
+
+                                    @foreach (var skill in match.MissingSkills)
+                                    {
+                                        <span class="badge bg-secondary me-1 mb-1">
+                                            @skill
+                                        </span>
+                                    }
+
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+            }
+
+
+            @* =========================
+               PROFESSIONAL LINKS
+               ========================= *@
+
             <h4>Professional Links</h4>
 
-            @if (!string.IsNullOrEmpty(Model.CandidateProfile.LinkedInUrl))
+            @if (!string.IsNullOrEmpty(
+                Model.CandidateProfile.LinkedInUrl))
             {
                 <a href="@Model.CandidateProfile.LinkedInUrl"
                    target="_blank"
@@ -104,7 +279,8 @@
                 </a>
             }
 
-            @if (!string.IsNullOrEmpty(Model.CandidateProfile.GitHubUrl))
+            @if (!string.IsNullOrEmpty(
+                Model.CandidateProfile.GitHubUrl))
             {
                 <a href="@Model.CandidateProfile.GitHubUrl"
                    target="_blank"
@@ -115,9 +291,15 @@
 
             <hr />
 
+
+            @* =========================
+               RESUME
+               ========================= *@
+
             <h4>Resume</h4>
 
-            @if (!string.IsNullOrEmpty(Model.CandidateProfile.ResumePath))
+            @if (!string.IsNullOrEmpty(
+                Model.CandidateProfile.ResumePath))
             {
                 <a asp-action="ViewCandidateResume"
                    asp-route-id="@Model.Id"
@@ -135,6 +317,11 @@
 
             <hr />
 
+
+            @* =========================
+               TEMP MESSAGES
+               ========================= *@
+
             @if (TempData["SuccessMessage"] != null)
             {
                 <div class="alert alert-success">
@@ -149,6 +336,11 @@
                 </div>
             }
 
+
+            @* =========================
+               APPLICATION DECISION
+               ========================= *@
+
             <h4>Application Decision</h4>
 
             <p>
@@ -157,9 +349,7 @@
             </p>
 
 
-            @* =========================
-               STATUS = APPLIED
-               ========================= *@
+            @* STATUS = APPLIED *@
 
             @if (Model.Status == "Applied")
             {
@@ -204,9 +394,7 @@
             }
 
 
-            @* =========================
-               STATUS = SHORTLISTED
-               ========================= *@
+            @* STATUS = SHORTLISTED *@
 
             @if (Model.Status == "Shortlisted")
             {
@@ -218,9 +406,7 @@
             }
 
 
-            @* =========================
-               STATUS = INTERVIEW SCHEDULED
-               ========================= *@
+            @* STATUS = INTERVIEW SCHEDULED *@
 
             @if (Model.Status == "Interview Scheduled")
             {
@@ -269,9 +455,7 @@
             }
 
 
-            @* =========================
-               STATUS = SELECTED
-               ========================= *@
+            @* STATUS = SELECTED *@
 
             @if (Model.Status == "Selected")
             {
@@ -281,9 +465,7 @@
             }
 
 
-            @* =========================
-               STATUS = REJECTED
-               ========================= *@
+            @* STATUS = REJECTED *@
 
             @if (Model.Status == "Rejected")
             {
@@ -294,7 +476,7 @@
 
 
             @* =========================
-               CHAT + BACK BUTTON
+               CHAT + BACK
                ========================= *@
 
             <div class="mt-4">

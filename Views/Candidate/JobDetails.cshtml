@@ -1,7 +1,10 @@
-﻿@model SmartHire.Models.Job
+﻿@model SmartHire.ViewModels.JobDetailsViewModel
 
 @{
     ViewData["Title"] = "Job Details";
+
+    var job = Model.Job;
+    var match = Model.Match;
 }
 
 <div class="container mt-4">
@@ -9,138 +12,446 @@
     <div class="card shadow">
         <div class="card-body p-4">
 
+            <!-- ========================= -->
+            <!-- JOB HEADER -->
+            <!-- ========================= -->
+
             <div class="d-flex justify-content-between align-items-start">
 
                 <div>
-                    <h2>@Model.Title</h2>
+
+                    <h2>
+                        @job.Title
+                    </h2>
 
                     <h5 class="text-muted">
-                        @Model.RecruiterProfile.CompanyName
+                        @job.RecruiterProfile.CompanyName
                     </h5>
+
                 </div>
 
-                <span class="badge bg-success">
-                    Open
-                </span>
+                <div class="text-end">
+
+                    <span class="badge bg-success">
+                        Open
+                    </span>
+
+                    @if (match != null)
+                    {
+                        <div class="mt-2">
+
+                            @if (match.MatchPercentage >= 80)
+                            {
+                                <span class="badge bg-success">
+                                    @match.MatchPercentage% High Match
+                                </span>
+                            }
+                            else if (match.MatchPercentage >= 50)
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    @match.MatchPercentage% Medium Match
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">
+                                    @match.MatchPercentage% Low Match
+                                </span>
+                            }
+
+                        </div>
+                    }
+
+                </div>
 
             </div>
 
             <hr />
 
+
+            <!-- ========================= -->
+            <!-- JOB INFORMATION -->
+            <!-- ========================= -->
+
             <dl class="row">
 
-                <dt class="col-md-3">Location</dt>
-                <dd class="col-md-9">@Model.Location</dd>
+                <dt class="col-md-3">
+                    Location
+                </dt>
 
-                <dt class="col-md-3">Employment Type</dt>
-                <dd class="col-md-9">@Model.EmploymentType</dd>
-
-                <dt class="col-md-3">Experience Required</dt>
                 <dd class="col-md-9">
-                    @Model.ExperienceRequired year(s)
+                    @job.Location
                 </dd>
 
-                <dt class="col-md-3">Required Skills</dt>
+
+                <dt class="col-md-3">
+                    Employment Type
+                </dt>
+
                 <dd class="col-md-9">
-                    @(Model.RequiredSkills ?? "Not specified")
+                    @job.EmploymentType
                 </dd>
 
-                <dt class="col-md-3">Salary</dt>
+
+                <dt class="col-md-3">
+                    Experience Required
+                </dt>
+
+                <dd class="col-md-9">
+                    @job.ExperienceRequired year(s)
+                </dd>
+
+
+                <dt class="col-md-3">
+                    Required Skills
+                </dt>
+
+                <dd class="col-md-9">
+                    @(job.RequiredSkills ?? "Not specified")
+                </dd>
+
+
+                <dt class="col-md-3">
+                    Salary
+                </dt>
+
                 <dd class="col-md-9">
 
-                    @if (Model.SalaryMin.HasValue &&
-                         Model.SalaryMax.HasValue)
+                    @if (job.SalaryMin.HasValue &&
+                         job.SalaryMax.HasValue)
                     {
                         <span>
-                            @Model.SalaryMin.Value.ToString("N0")
+                            @job.SalaryMin.Value.ToString("N0")
                             -
-                            @Model.SalaryMax.Value.ToString("N0")
+                            @job.SalaryMax.Value.ToString("N0")
                         </span>
                     }
                     else
                     {
-                        <span>Not disclosed</span>
+                        <span>
+                            Not disclosed
+                        </span>
                     }
 
                 </dd>
 
-                <dt class="col-md-3">Application Deadline</dt>
+
+                <dt class="col-md-3">
+                    Application Deadline
+                </dt>
+
                 <dd class="col-md-9">
 
-                    @(Model.ApplicationDeadline.HasValue
-                        ? Model.ApplicationDeadline.Value.ToString("dd MMM yyyy")
+                    @(job.ApplicationDeadline.HasValue
+                        ? job.ApplicationDeadline.Value.ToString("dd MMM yyyy")
                         : "Not specified")
 
                 </dd>
 
-                <dt class="col-md-3">Posted Date</dt>
+
+                <dt class="col-md-3">
+                    Posted Date
+                </dt>
+
                 <dd class="col-md-9">
-                    @Model.PostedDate.ToString("dd MMM yyyy")
+                    @job.PostedDate.ToString("dd MMM yyyy")
                 </dd>
 
             </dl>
 
+
             <hr />
 
-            <h5>Job Description</h5>
+
+            <!-- ========================= -->
+            <!-- JOB MATCH -->
+            <!-- ========================= -->
+            @if (match != null)
+            {
+                <div class="card bg-light mb-4">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <h4 class="mb-0">
+                                Your Job Match
+                            </h4>
+
+                            @if (match.MatchPercentage >= 80)
+                            {
+                                <span class="badge bg-success">
+                                    High Match
+                                </span>
+                            }
+                            else if (match.MatchPercentage >= 50)
+                            {
+                                <span class="badge bg-warning text-dark">
+                                    Medium Match
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">
+                                    Low Match
+                                </span>
+                            }
+
+                        </div>
+
+
+                        <hr />
+
+
+                        <!-- Overall Match -->
+
+                        <div class="mb-3">
+
+                            <div class="d-flex justify-content-between">
+
+                                <strong>
+                                    Overall Match
+                                </strong>
+
+                                <strong>
+                                    @match.MatchPercentage%
+                                </strong>
+
+                            </div>
+
+
+                            <div class="progress mt-2"
+                                 style="height: 25px;">
+
+                                <div class="progress-bar"
+                                     role="progressbar"
+                                     style="width: @match.MatchPercentage%;"
+                                     aria-valuenow="@match.MatchPercentage"
+                                     aria-valuemin="0"
+                                     aria-valuemax="100">
+
+                                    @match.MatchPercentage%
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Skill + Experience -->
+
+                        <div class="row mt-4">
+
+                            <div class="col-md-6">
+
+                                <div class="border rounded p-3">
+
+                                    <strong>
+                                        Skills Match
+                                    </strong>
+
+                                    <h4 class="mt-2">
+                                        @match.SkillMatchPercentage%
+                                    </h4>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="col-md-6">
+
+                                <div class="border rounded p-3">
+
+                                    <strong>
+                                        Experience Match
+                                    </strong>
+
+                                    <h4 class="mt-2">
+                                        @match.ExperienceMatchPercentage%
+                                    </h4>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- Matched Skills -->
+                        @if (match.MatchedSkills.Any())
+                        {
+                            <div class="mt-4">
+
+                                <strong>
+                                    Matched Skills
+                                </strong>
+
+                                <div class="mt-2">
+
+                                    @foreach (var skill in match.MatchedSkills)
+                                    {
+                                        <span class="badge bg-success me-1 mb-1">
+                                            @skill
+                                        </span>
+                                    }
+
+                                </div>
+
+                            </div>
+                        }
+
+
+                        <!-- Missing Skills -->
+                        @if (match.MissingSkills.Any())
+                        {
+                            <div class="mt-3">
+
+                                <strong>
+                                    Skills to Improve
+                                </strong>
+
+                                <div class="mt-2">
+
+                                    @foreach (var skill in match.MissingSkills)
+                                    {
+                                        <span class="badge bg-secondary me-1 mb-1">
+                                            @skill
+                                        </span>
+                                    }
+
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+
+                    Complete your candidate profile to see
+                    your job match score.
+
+                </div>
+            }
+
+
+            <!-- ========================= -->
+            <!-- JOB DESCRIPTION -->
+            <!-- ========================= -->
+
+            <h5>
+                Job Description
+            </h5>
 
             <p style="white-space: pre-line;">
-                @Model.Description
+                @job.Description
             </p>
+
 
             <hr />
 
-            <h5>About Company</h5>
+
+            <!-- ========================= -->
+            <!-- COMPANY -->
+            <!-- ========================= -->
+
+            <h5>
+                About Company
+            </h5>
 
             <p>
-                @Model.RecruiterProfile.CompanyDescription
+                @job.RecruiterProfile.CompanyDescription
             </p>
 
-            @if (!string.IsNullOrEmpty(Model.RecruiterProfile.CompanyWebsite))
+
+            @if (!string.IsNullOrEmpty(
+                job.RecruiterProfile.CompanyWebsite))
             {
                 <p>
-                    <strong>Website:</strong>
-                    <a href="@Model.RecruiterProfile.CompanyWebsite"
+
+                    <strong>
+                        Website:
+                    </strong>
+
+                    <a href="@job.RecruiterProfile.CompanyWebsite"
                        target="_blank">
-                        @Model.RecruiterProfile.CompanyWebsite
+
+                        @job.RecruiterProfile.CompanyWebsite
+
                     </a>
+
                 </p>
             }
 
+
             <hr />
 
+
+            <!-- ========================= -->
+            <!-- MESSAGES -->
+            <!-- ========================= -->
             @if (TempData["SuccessMessage"] != null)
             {
                 <div class="alert alert-success">
+
                     @TempData["SuccessMessage"]
+
                 </div>
             }
+
 
             @if (TempData["ErrorMessage"] != null)
             {
                 <div class="alert alert-danger">
+
                     @TempData["ErrorMessage"]
+
                 </div>
             }
 
-            <form asp-action="ApplyJob"
-                  asp-route-id="@Model.Id"
-                  method="post"
-                  class="d-inline">
 
-                <button type="submit"
-                        class="btn btn-success">
-                    Apply Now
+            <!-- ========================= -->
+            <!-- APPLY -->
+            <!-- ========================= -->
+            @if (Model.AlreadyApplied)
+            {
+                <button class="btn btn-success"
+                        disabled>
+
+                    Already Applied
+
                 </button>
+            }
+            else
+            {
+                <form asp-action="ApplyJob"
+                      asp-route-id="@job.Id"
+                      method="post"
+                      class="d-inline">
 
-            </form>
+                    <button type="submit"
+                            class="btn btn-success">
+
+                        Apply Now
+
+                    </button>
+
+                </form>
+            }
+
 
             <a asp-action="BrowseJobs"
                class="btn btn-secondary">
-                Back to Jobs
-            </a>
 
-           
+                Back to Jobs
+
+            </a>
 
         </div>
     </div>
