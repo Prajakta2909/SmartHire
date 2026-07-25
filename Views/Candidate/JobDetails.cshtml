@@ -1,0 +1,148 @@
+﻿@model SmartHire.Models.Job
+
+@{
+    ViewData["Title"] = "Job Details";
+}
+
+<div class="container mt-4">
+
+    <div class="card shadow">
+        <div class="card-body p-4">
+
+            <div class="d-flex justify-content-between align-items-start">
+
+                <div>
+                    <h2>@Model.Title</h2>
+
+                    <h5 class="text-muted">
+                        @Model.RecruiterProfile.CompanyName
+                    </h5>
+                </div>
+
+                <span class="badge bg-success">
+                    Open
+                </span>
+
+            </div>
+
+            <hr />
+
+            <dl class="row">
+
+                <dt class="col-md-3">Location</dt>
+                <dd class="col-md-9">@Model.Location</dd>
+
+                <dt class="col-md-3">Employment Type</dt>
+                <dd class="col-md-9">@Model.EmploymentType</dd>
+
+                <dt class="col-md-3">Experience Required</dt>
+                <dd class="col-md-9">
+                    @Model.ExperienceRequired year(s)
+                </dd>
+
+                <dt class="col-md-3">Required Skills</dt>
+                <dd class="col-md-9">
+                    @(Model.RequiredSkills ?? "Not specified")
+                </dd>
+
+                <dt class="col-md-3">Salary</dt>
+                <dd class="col-md-9">
+
+                    @if (Model.SalaryMin.HasValue &&
+                         Model.SalaryMax.HasValue)
+                    {
+                        <span>
+                            @Model.SalaryMin.Value.ToString("N0")
+                            -
+                            @Model.SalaryMax.Value.ToString("N0")
+                        </span>
+                    }
+                    else
+                    {
+                        <span>Not disclosed</span>
+                    }
+
+                </dd>
+
+                <dt class="col-md-3">Application Deadline</dt>
+                <dd class="col-md-9">
+
+                    @(Model.ApplicationDeadline.HasValue
+                        ? Model.ApplicationDeadline.Value.ToString("dd MMM yyyy")
+                        : "Not specified")
+
+                </dd>
+
+                <dt class="col-md-3">Posted Date</dt>
+                <dd class="col-md-9">
+                    @Model.PostedDate.ToString("dd MMM yyyy")
+                </dd>
+
+            </dl>
+
+            <hr />
+
+            <h5>Job Description</h5>
+
+            <p style="white-space: pre-line;">
+                @Model.Description
+            </p>
+
+            <hr />
+
+            <h5>About Company</h5>
+
+            <p>
+                @Model.RecruiterProfile.CompanyDescription
+            </p>
+
+            @if (!string.IsNullOrEmpty(Model.RecruiterProfile.CompanyWebsite))
+            {
+                <p>
+                    <strong>Website:</strong>
+                    <a href="@Model.RecruiterProfile.CompanyWebsite"
+                       target="_blank">
+                        @Model.RecruiterProfile.CompanyWebsite
+                    </a>
+                </p>
+            }
+
+            <hr />
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">
+                    @TempData["SuccessMessage"]
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">
+                    @TempData["ErrorMessage"]
+                </div>
+            }
+
+            <form asp-action="ApplyJob"
+                  asp-route-id="@Model.Id"
+                  method="post"
+                  class="d-inline">
+
+                <button type="submit"
+                        class="btn btn-success">
+                    Apply Now
+                </button>
+
+            </form>
+
+            <a asp-action="BrowseJobs"
+               class="btn btn-secondary">
+                Back to Jobs
+            </a>
+
+           
+
+        </div>
+    </div>
+
+</div>

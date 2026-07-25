@@ -1,0 +1,81 @@
+﻿@model SmartHire.ViewModels.ResumeUploadViewModel
+
+@{
+    ViewData["Title"] = "Upload Resume";
+}
+
+<div class="container mt-4">
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+
+            <div class="card shadow">
+                <div class="card-body p-4">
+
+                    <h2 class="mb-3">Upload Resume</h2>
+
+                    <p class="text-muted">
+                        Upload your latest resume in PDF format.
+                        Maximum file size: 5 MB.
+                    </p>
+
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">
+                            @TempData["SuccessMessage"]
+                        </div>
+                    }
+
+                    <form asp-action="UploadResume"
+                          method="post"
+                          enctype="multipart/form-data">
+
+                        <div asp-validation-summary="ModelOnly"
+                             class="text-danger mb-3">
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label asp-for="Resume"
+                                   class="form-label">
+                            </label>
+
+                            <input asp-for="Resume"
+                                   type="file"
+                                   accept=".pdf,application/pdf"
+                                   class="form-control" />
+
+                            <span asp-validation-for="Resume"
+                                  class="text-danger">
+                            </span>
+
+                        </div>
+
+                        <button type="submit"
+                                class="btn btn-primary">
+                            Upload Resume
+                        </button>
+
+
+                        <a asp-action="ViewResume"
+                           target="_blank"
+                           class="btn btn-success">
+                            View Current Resume
+                        </a>
+
+                        <a asp-action="Profile"
+                           class="btn btn-secondary">
+                            Back to Profile
+                        </a>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

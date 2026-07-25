@@ -1,0 +1,132 @@
+﻿@model IEnumerable<SmartHire.Models.JobApplication>
+
+@{
+    ViewData["Title"] = "My Applications";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">My Applications</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            You haven't applied for any jobs yet.
+        </div>
+
+        <a asp-action="BrowseJobs"
+           class="btn btn-primary">
+            Browse Jobs
+        </a>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Company</th>
+                        <th>Location</th>
+                        <th>Applied Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var application in Model)
+                    {
+                        <tr>
+
+                            <td>
+                                @application.Job.Title
+                            </td>
+
+                            <td>
+                                @application.Job.RecruiterProfile.CompanyName
+                            </td>
+
+                            <td>
+                                @application.Job.Location
+                            </td>
+
+                            <td>
+                                @application.AppliedDate.ToString("dd MMM yyyy")
+                            </td>
+
+                            <td>
+                                @if (application.Status == "Applied")
+                                {
+                                    <span class="badge bg-primary">
+                                        Applied
+                                    </span>
+                                }
+                                else if (application.Status == "Shortlisted")
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        Shortlisted
+                                    </span>
+                                }
+                                else if (application.Status == "Interview Scheduled")
+                                {
+                                    <span class="badge bg-info text-dark">
+                                        Interview Scheduled
+                                    </span>
+                                }
+                                else if (application.Status == "Selected")
+                                {
+                                    <span class="badge bg-success">
+                                        Selected
+                                    </span>
+                                }
+                                else if (application.Status == "Rejected")
+                                {
+                                    <span class="badge bg-danger">
+                                        Rejected
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @application.Status
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (application.Job.IsActive)
+                                {
+                                    <a asp-action="JobDetails"
+                                       asp-route-id="@application.JobId"
+                                       class="btn btn-sm btn-outline-primary">
+                                        View Job
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        Job Closed
+                                    </span>
+                                }
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <a asp-action="BrowseJobs"
+           class="btn btn-primary">
+            Browse More Jobs
+        </a>
+    }
+
+</div>

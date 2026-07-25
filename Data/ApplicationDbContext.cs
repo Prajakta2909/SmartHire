@@ -15,6 +15,8 @@ namespace SmartHire.Data
 
         public DbSet<RecruiterProfile> RecruiterProfiles { get; set; }
         public DbSet<Job> Jobs { get; set; }
+        public DbSet<CandidateProfile> CandidateProfiles { get; set; }
+        public DbSet<JobApplication> JobApplications { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder builder)
@@ -48,6 +50,36 @@ namespace SmartHire.Data
                 .Property(j => j.SalaryMax)
                 .HasPrecision(18, 2);
 
+
+            builder.Entity<CandidateProfile>()
+                .HasOne(c => c.ApplicationUser)
+                .WithOne()
+                .HasForeignKey<CandidateProfile>(c => c.ApplicationUserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+
+
+
+            builder.Entity<JobApplication>()
+                .HasOne(a => a.CandidateProfile)
+                .WithMany(c => c.JobApplications)
+                .HasForeignKey(a => a.CandidateProfileId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<JobApplication>()
+                .HasOne(a => a.Job)
+                .WithMany(j => j.JobApplications)
+                .HasForeignKey(a => a.JobId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+            builder.Entity<JobApplication>()
+                .HasIndex(a => new
+                {
+                    a.CandidateProfileId,
+                    a.JobId
+                })
+                .IsUnique();
 
 
 

@@ -13,14 +13,19 @@ namespace SmartHire.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IWebHostEnvironment _environment;
 
         public RecruiterController(
             ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
+            UserManager<ApplicationUser> userManager,
+            IWebHostEnvironment environment)
         {
             _context = context;
             _userManager = userManager;
+            _environment = environment;
         }
+
+
 
         public IActionResult Dashboard()
         {
@@ -405,6 +410,202 @@ namespace SmartHire.Controllers
         }
 
         //--------------------------------------------------------------------------------------------------------------------------------
+
+        [HttpGet]
+        public async Task<IActionResult> JobApplications(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+
+            if (recruiterProfile == null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            // Make sure this job belongs to the logged-in recruiter
+            var job = await _context.Jobs
+                .FirstOrDefaultAsync(j =>
+                    j.Id == id &&
+                    j.RecruiterProfileId == recruiterProfile.Id);
+
+            if (job == null)
+            {
+                return NotFound();
+            }
+
+            var applications = await _context.JobApplications
+                .Include(a => a.CandidateProfile)
+                    .ThenInclude(c => c.ApplicationUser)
+                .Where(a => a.JobId == id)
+                .OrderByDescending(a => a.AppliedDate)
+                .ToListAsync();
+
+            ViewBag.JobTitle = job.Title;
+            ViewBag.JobId = job.Id;
+
+            return View(applications);
+        }
+
+
+        //-----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        [HttpGet]
+        public async Task<IActionResult> ApplicationDetails(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+
+            if (recruiterProfile == null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            var application = await _context.JobApplications
+                .Include(a => a.CandidateProfile)
+                    .ThenInclude(c => c.ApplicationUser)
+                .Include(a => a.Job)
+                .FirstOrDefaultAsync(a =>
+                    a.Id == id &&
+                    a.Job.RecruiterProfileId == recruiterProfile.Id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            return View(application);
+        }
+
+
+        //------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+        [HttpGet]
+        public async Task<IActionResult> ViewCandidateResume(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+
+            if (recruiterProfile == null)
+            {
+                return NotFound();
+            }
+
+            var application = await _context.JobApplications
+                .Include(a => a.CandidateProfile)
+                .Include(a => a.Job)
+                .FirstOrDefaultAsync(a =>
+                    a.Id == id &&
+                    a.Job.RecruiterProfileId == recruiterProfile.Id);
+
+            if (application == null ||
+                string.IsNullOrEmpty(application.CandidateProfile.ResumePath))
+            {
+                return NotFound();
+            }
+
+            var fileName =
+                Path.GetFileName(application.CandidateProfile.ResumePath);
+
+            var filePath = Path.Combine(
+                _environment.WebRootPath,
+                "uploads",
+                "resumes",
+                fileName);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound();
+            }
+
+            return PhysicalFile(filePath, "application/pdf");
+        }
+
+
+        //----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateApplicationStatus(
+    int id,
+    string status)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var recruiterProfile = await _context.RecruiterProfiles
+                .FirstOrDefaultAsync(r => r.ApplicationUserId == userId);
+
+            if (recruiterProfile == null)
+            {
+                return RedirectToAction(nameof(Profile));
+            }
+
+            // Allow only valid status values
+            var allowedStatuses = new[]
+            {
+        "Shortlisted",
+        "Rejected"
+    };
+
+            if (!allowedStatuses.Contains(status))
+            {
+                return BadRequest("Invalid application status.");
+            }
+
+            var application = await _context.JobApplications
+                .Include(a => a.Job)
+                .FirstOrDefaultAsync(a =>
+                    a.Id == id &&
+                    a.Job.RecruiterProfileId == recruiterProfile.Id);
+
+            if (application == null)
+            {
+                return NotFound();
+            }
+
+            application.Status = status;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] =
+                $"Candidate marked as {status}.";
+
+            return RedirectToAction(
+                nameof(ApplicationDetails),
+                new { id = application.Id });
+        }
+
+
+        //---------------------------------------------------------------------------------------------------------------------------------------------
 
 
 

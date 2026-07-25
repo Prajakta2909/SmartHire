@@ -100,6 +100,12 @@
                                     Edit
                                 </a>
 
+                                <a asp-action="JobApplications"
+                                   asp-route-id="@job.Id"
+                                   class="btn btn-sm btn-primary">
+                                    Applications
+                                </a>
+
                                 <form asp-action="ToggleJobStatus"
                                       asp-route-id="@job.Id"
                                       method="post"

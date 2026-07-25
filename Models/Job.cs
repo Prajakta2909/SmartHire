@@ -45,5 +45,9 @@ namespace SmartHire.Models
 
         // Navigation Property
         public RecruiterProfile RecruiterProfile { get; set; } = null!;
+
+
+        public ICollection<JobApplication> JobApplications { get; set; }
+        = new List<JobApplication>();
     }
 }

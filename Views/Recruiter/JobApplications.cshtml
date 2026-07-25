@@ -1,0 +1,94 @@
+﻿@model IEnumerable<SmartHire.Models.JobApplication>
+
+@{
+    ViewData["Title"] = "Job Applications";
+}
+
+<div class="container mt-4">
+
+    <h2>Applications - @ViewBag.JobTitle</h2>
+
+    <p class="text-muted mb-4">
+        Candidates who have applied for this position.
+    </p>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No candidates have applied for this job yet.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-hover align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Location</th>
+                        <th>Qualification</th>
+                        <th>Experience</th>
+                        <th>Applied Date</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var application in Model)
+                    {
+                        <tr>
+
+                            <td>
+                                @application.CandidateProfile.ApplicationUser.FirstName
+                                @application.CandidateProfile.ApplicationUser.LastName
+                            </td>
+
+                            <td>
+                                @application.CandidateProfile.Location
+                            </td>
+
+                            <td>
+                                @(application.CandidateProfile.HighestQualification
+                                    ?? "Not specified")
+                            </td>
+
+                            <td>
+                                @application.CandidateProfile.ExperienceYears year(s)
+                            </td>
+
+                            <td>
+                                @application.AppliedDate.ToString("dd MMM yyyy")
+                            </td>
+
+                            <td>
+                                @application.Status
+                            </td>
+
+                            <td>
+                                <a asp-action="ApplicationDetails"
+                                   asp-route-id="@application.Id"
+                                   class="btn btn-sm btn-primary">
+                                    View Candidate
+                                </a>
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+
+    <a asp-action="MyJobs"
+       class="btn btn-secondary">
+        Back to My Jobs
+    </a>
+
+</div>

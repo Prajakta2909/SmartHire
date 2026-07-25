@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartHire.Data;
 
@@ -11,9 +12,11 @@ using SmartHire.Data;
 namespace SmartHire.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260725053058_AddCandidateProfile")]
+    partial class AddCandidateProfile
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -360,38 +363,6 @@ namespace SmartHire.Migrations
                     b.ToTable("Jobs");
                 });
 
-            modelBuilder.Entity("SmartHire.Models.JobApplication", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("AppliedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CandidateProfileId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("JobId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("JobId");
-
-                    b.HasIndex("CandidateProfileId", "JobId")
-                        .IsUnique();
-
-                    b.ToTable("JobApplications");
-                });
-
             modelBuilder.Entity("SmartHire.Models.RecruiterProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -506,25 +477,6 @@ namespace SmartHire.Migrations
                     b.Navigation("RecruiterProfile");
                 });
 
-            modelBuilder.Entity("SmartHire.Models.JobApplication", b =>
-                {
-                    b.HasOne("SmartHire.Models.CandidateProfile", "CandidateProfile")
-                        .WithMany("JobApplications")
-                        .HasForeignKey("CandidateProfileId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("SmartHire.Models.Job", "Job")
-                        .WithMany("JobApplications")
-                        .HasForeignKey("JobId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CandidateProfile");
-
-                    b.Navigation("Job");
-                });
-
             modelBuilder.Entity("SmartHire.Models.RecruiterProfile", b =>
                 {
                     b.HasOne("SmartHire.Models.ApplicationUser", "ApplicationUser")
@@ -534,16 +486,6 @@ namespace SmartHire.Migrations
                         .IsRequired();
 
                     b.Navigation("ApplicationUser");
-                });
-
-            modelBuilder.Entity("SmartHire.Models.CandidateProfile", b =>
-                {
-                    b.Navigation("JobApplications");
-                });
-
-            modelBuilder.Entity("SmartHire.Models.Job", b =>
-                {
-                    b.Navigation("JobApplications");
                 });
 
             modelBuilder.Entity("SmartHire.Models.RecruiterProfile", b =>

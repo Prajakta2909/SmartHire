@@ -1,0 +1,270 @@
+﻿@model SmartHire.ViewModels.JobSearchViewModel
+
+@{
+    ViewData["Title"] = "Browse Jobs";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Browse Jobs</h2>
+
+    <!-- Search and Filters -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <form asp-action="BrowseJobs"
+                  method="get">
+
+                <div class="row">
+
+                    <!-- Search -->
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+                            Search
+                        </label>
+
+                        <input type="text"
+                               name="searchTerm"
+                               value="@Model.SearchTerm"
+                               class="form-control"
+                               placeholder="Job title or skill" />
+
+                    </div>
+
+                    <!-- Location -->
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+                            Location
+                        </label>
+
+                        <input type="text"
+                               name="location"
+                               value="@Model.Location"
+                               class="form-control"
+                               placeholder="e.g. Pune" />
+
+                    </div>
+
+                    <!-- Employment Type -->
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+                            Employment Type
+                        </label>
+
+                        <select name="employmentType"
+                                class="form-select">
+
+                            <option value="">
+                                All Types
+                            </option>
+
+                            <option value="Full Time"
+                                    selected="@(Model.EmploymentType == "Full Time")">
+                                Full Time
+                            </option>
+
+                            <option value="Part Time"
+                                    selected="@(Model.EmploymentType == "Part Time")">
+                                Part Time
+                            </option>
+
+                            <option value="Contract"
+                                    selected="@(Model.EmploymentType == "Contract")">
+                                Contract
+                            </option>
+
+                            <option value="Internship"
+                                    selected="@(Model.EmploymentType == "Internship")">
+                                Internship
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="col-md-2 mb-3 d-flex align-items-end">
+
+                        <button type="submit"
+                                class="btn btn-primary me-2">
+                            Search
+                        </button>
+
+                        <a asp-action="BrowseJobs"
+                           class="btn btn-secondary">
+                            Clear
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+
+    <!-- Job Results -->
+    @if (!Model.Jobs.Any())
+    {
+        <div class="alert alert-info">
+            No jobs found matching your search.
+        </div>
+    }
+    else
+    {
+        @foreach (var job in Model.Jobs)
+        {
+            <div class="card shadow-sm mb-3">
+
+                <div class="card-body">
+
+                    <div class="d-flex justify-content-between">
+
+                        <div>
+                            <h4>@job.Title</h4>
+
+                            <h6 class="text-muted">
+                                @job.RecruiterProfile.CompanyName
+                            </h6>
+                        </div>
+
+                        <span class="badge bg-success align-self-start">
+                            Active
+                        </span>
+
+                    </div>
+
+                    <hr />
+
+                    <p>
+                        <strong>Location:</strong>
+                        @job.Location
+                    </p>
+
+                    <p>
+                        <strong>Employment Type:</strong>
+                        @job.EmploymentType
+                    </p>
+
+                    <p>
+                        <strong>Experience:</strong>
+                        @job.ExperienceRequired year(s)
+                    </p>
+
+                    <p>
+                        <strong>Skills:</strong>
+                        @(job.RequiredSkills ?? "Not specified")
+                    </p>
+
+                    <p>
+                        <strong>Salary:</strong>
+
+                        @if (job.SalaryMin.HasValue &&
+                             job.SalaryMax.HasValue)
+                        {
+                            <span>
+                                @job.SalaryMin.Value.ToString("N0")
+                                -
+                                @job.SalaryMax.Value.ToString("N0")
+                            </span>
+                        }
+                        else
+                        {
+                            <span>Not disclosed</span>
+                        }
+                    </p>
+
+                    <p class="text-muted">
+                        Posted:
+                        @job.PostedDate.ToString("dd MMM yyyy")
+                    </p>
+
+                    <a asp-action="JobDetails"
+                       asp-route-id="@job.Id"
+                       class="btn btn-primary">
+                        View Details
+                    </a>
+
+                </div>
+
+            </div>
+        }
+
+
+        <!-- Pagination -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav class="mt-4">
+
+                <ul class="pagination justify-content-center">
+
+                    <!-- Previous -->
+
+                    <li class="page-item
+                        @(Model.PageNumber == 1 ? "disabled" : "")">
+
+                        <a class="page-link"
+                           asp-action="BrowseJobs"
+                           asp-route-pageNumber="@(Model.PageNumber - 1)"
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-location="@Model.Location"
+                           asp-route-employmentType="@Model.EmploymentType">
+
+                            Previous
+
+                        </a>
+
+                    </li>
+
+
+                    <!-- Page Numbers -->
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item
+                            @(i == Model.PageNumber ? "active" : "")">
+
+                            <a class="page-link"
+                               asp-action="BrowseJobs"
+                               asp-route-pageNumber="@i"
+                               asp-route-searchTerm="@Model.SearchTerm"
+                               asp-route-location="@Model.Location"
+                               asp-route-employmentType="@Model.EmploymentType">
+
+                                @i
+
+                            </a>
+
+                        </li>
+                    }
+
+
+                    <!-- Next -->
+
+                    <li class="page-item
+                        @(Model.PageNumber == Model.TotalPages ? "disabled" : "")">
+
+                        <a class="page-link"
+                           asp-action="BrowseJobs"
+                           asp-route-pageNumber="@(Model.PageNumber + 1)"
+                           asp-route-searchTerm="@Model.SearchTerm"
+                           asp-route-location="@Model.Location"
+                           asp-route-employmentType="@Model.EmploymentType">
+
+                            Next
+
+                        </a>
+
+                    </li>
+
+                </ul>
+
+            </nav>
+        }
+    }
+
+</div>
